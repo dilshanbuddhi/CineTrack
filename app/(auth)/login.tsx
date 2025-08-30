@@ -1,3 +1,4 @@
+
 import {
     View,
     Text,
@@ -124,7 +125,7 @@ const Login = () => {
             await login(email, password);
             buttonPressAnim.value = withSpring(1.05, { damping: 8 });
             setTimeout(() => {
-                router.push('/dashboard/home');
+                router.push('/(dashboard)/home');
             }, 200);
         } catch (err) {
             console.log(err);
