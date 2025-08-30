@@ -4,7 +4,7 @@ import { Stack } from "expo-router"
 
 const TaskLayout = () => {
   return (
-    <Stack screenOptions={{ animation: "slide_from_right" }}>
+    <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="[id]" options={{ title: "Movie Form" }} />
     </Stack>

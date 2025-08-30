@@ -490,7 +490,7 @@ const MovieTrackerHome = () => {
 
                     {/* Floating Action Button */}
                     <AnimatedTouchableOpacity
-                        onPress={() => router.push(`/movies/add`)}
+                        onPress={() => router.push(`/movies/new`)}
 
                         style={[
                             fabStyle,

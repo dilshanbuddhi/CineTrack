@@ -8,11 +8,12 @@ import {
     StatusBar,
     Dimensions,
     Modal,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     Alert,
     Image,
+    StyleSheet,
+    SafeAreaView,
 } from 'react-native';
 import Animated, {
     useSharedValue,
@@ -21,15 +22,15 @@ import Animated, {
     withSpring,
     withDelay,
     interpolate,
-    Extrapolate,
-    withRepeat,
     withSequence,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import Loader from "@/components/Loader";
 
 const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
 
 // Movie/Series interface
 interface MovieSeries {
@@ -95,31 +96,19 @@ const AddMovieScreen = () => {
         formAnim.value = withDelay(500, withTiming(1, { duration: 600 }));
 
         // Floating particles animation
-        particle1.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 3000 }),
-                withTiming(0, { duration: 3000 })
-            ),
-            -1,
-            true
+        particle1.value = withSequence(
+            withTiming(1, { duration: 3000 }),
+            withTiming(0, { duration: 3000 })
         );
 
-        particle2.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 2500 }),
-                withTiming(0, { duration: 2500 })
-            ),
-            -1,
-            true
+        particle2.value = withSequence(
+            withTiming(1, { duration: 2500 }),
+            withTiming(0, { duration: 2500 })
         );
 
-        particle3.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 3500 }),
-                withTiming(0, { duration: 3500 })
-            ),
-            -1,
-            true
+        particle3.value = withSequence(
+            withTiming(1, { duration: 3500 }),
+            withTiming(0, { duration: 3500 })
         );
     }, []);
 
@@ -248,86 +237,94 @@ const AddMovieScreen = () => {
         onSelect: (value: string) => void;
         getIcon?: (value: string) => string;
     }) => (
-        <Modal transparent visible={visible} animationType="fade">
-            <BlurView intensity={50} style={{ flex: 1 }}>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                }}>
-                    <View style={{
-                        backgroundColor: '#1f2937',
-                        borderRadius: 20,
-                        padding: 20,
-                        width: width * 0.8,
-                        maxHeight: height * 0.6,
-                        borderWidth: 1,
-                        borderColor: 'rgba(75, 85, 99, 0.3)',
-                    }}>
-                        <Text style={{
-                            color: '#ffffff',
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            marginBottom: 20,
-                        }}>
-                            Select {title}
-                        </Text>
+        <Modal
+            transparent
+            visible={visible}
+            animationType="slide"
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalContainer}>
+                <TouchableOpacity
+                    style={StyleSheet.absoluteFill}
+                    activeOpacity={1}
+                    onPress={onClose}
+                />
 
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {options.map((option) => (
+                <View style={styles.modalContent}>
+                    <LinearGradient
+                        colors={['#1f2937', '#374151']}
+                        style={styles.modalGradient}
+                    >
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>
+                                Select {title}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={styles.closeButton}
+                            >
+                                <Text style={styles.closeButtonText}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Options List */}
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            style={styles.optionsContainer}
+                        >
+                            {options.map((option, index) => (
                                 <TouchableOpacity
-                                    key={option}
+                                    key={`${option}-${index}`}
                                     onPress={() => {
                                         onSelect(option);
                                         onClose();
                                     }}
-                                    style={{
-                                        padding: 16,
-                                        borderRadius: 12,
-                                        marginBottom: 8,
-                                        backgroundColor: selectedValue === option ? '#e50914' : 'rgba(55, 65, 81, 0.5)',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                    }}
+                                    style={[
+                                        styles.optionItem,
+                                        {
+                                            backgroundColor: selectedValue === option
+                                                ? '#e50914'
+                                                : 'rgba(55,65,81,0.5)',
+                                            marginBottom: index === options.length - 1 ? 0 : 8,
+                                        }
+                                    ]}
                                 >
                                     {getIcon && (
-                                        <Text style={{ fontSize: 20, marginRight: 12 }}>
+                                        <Text style={styles.optionIcon}>
                                             {getIcon(option)}
                                         </Text>
                                     )}
-                                    <Text style={{
-                                        color: selectedValue === option ? '#ffffff' : '#9ca3af',
-                                        fontSize: 16,
-                                        fontWeight: selectedValue === option ? 'bold' : 'normal',
-                                    }}>
+                                    <Text
+                                        style={[
+                                            styles.optionText,
+                                            {
+                                                color: selectedValue === option ? '#fff' : '#9ca3af',
+                                                fontWeight: selectedValue === option ? 'bold' : 'normal',
+                                            }
+                                        ]}
+                                    >
                                         {option}
                                     </Text>
+                                    {selectedValue === option && (
+                                        <Text style={styles.selectedIcon}>✓</Text>
+                                    )}
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
 
+                        {/* Cancel Button */}
                         <TouchableOpacity
                             onPress={onClose}
-                            style={{
-                                marginTop: 16,
-                                padding: 12,
-                                backgroundColor: 'rgba(75, 85, 99, 0.5)',
-                                borderRadius: 12,
-                            }}
+                            style={styles.cancelButton}
                         >
-                            <Text style={{
-                                color: '#9ca3af',
-                                textAlign: 'center',
-                                fontSize: 16,
-                            }}>
+                            <Text style={styles.cancelButtonText}>
                                 Cancel
                             </Text>
                         </TouchableOpacity>
-                    </View>
+                    </LinearGradient>
                 </View>
-            </BlurView>
+            </View>
         </Modal>
     );
 
@@ -383,6 +380,7 @@ const AddMovieScreen = () => {
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1 }}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
                 >
                     <Animated.View style={[{ flex: 1 }, containerStyle]}>
 
@@ -390,9 +388,9 @@ const AddMovieScreen = () => {
                         <Animated.View style={[
                             headerStyle,
                             {
-                                paddingTop: 50,
-                                paddingHorizontal: 20,
-                                paddingBottom: 20,
+                                paddingTop: isSmallDevice ? 40 : 50,
+                                paddingHorizontal: 16,
+                                paddingBottom: 16,
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -402,61 +400,50 @@ const AddMovieScreen = () => {
                                 onPress={() => router.back()}
                                 style={{
                                     backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                    padding: 12,
+                                    padding: 10,
                                     borderRadius: 12,
                                     borderWidth: 1,
                                     borderColor: 'rgba(75, 85, 99, 0.3)',
                                 }}
                             >
-                                <Text style={{ color: '#ffffff', fontSize: 18 }}>←</Text>
+                                <Text style={{ color: '#ffffff', fontSize: 16 }}>←</Text>
                             </TouchableOpacity>
 
-                            <View style={{ alignItems: 'center' }}>
+                            <View style={{ alignItems: 'center', flex: 1, marginHorizontal: 10 }}>
                                 <Text style={{
                                     color: '#ffffff',
-                                    fontSize: 24,
+                                    fontSize: isSmallDevice ? 20 : 24,
                                     fontWeight: 'bold',
+                                    textAlign: 'center',
                                 }}>
                                     {isNew ? 'Add to Collection' : 'Edit Movie'}
                                 </Text>
                                 <Text style={{
                                     color: '#9ca3af',
-                                    fontSize: 14,
+                                    fontSize: isSmallDevice ? 12 : 14,
                                     marginTop: 4,
+                                    textAlign: 'center',
                                 }}>
                                     Track your cinema journey
                                 </Text>
                             </View>
 
-                            <View style={{ width: 44 }} />
+                            <View style={{ width: 40 }} />
                         </Animated.View>
 
                         <ScrollView
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: 100 }}
+                            contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
                         >
-                            <Animated.View style={[{ paddingHorizontal: 20 }, formStyle]}>
+                            <Animated.View style={[formStyle]}>
 
                                 {/* Title Input */}
-                                <View style={{ marginBottom: 20 }}>
-                                    <Text style={{
-                                        color: '#ffffff',
-                                        fontSize: 16,
-                                        fontWeight: '600',
-                                        marginBottom: 8,
-                                    }}>
+                                <View style={{ marginBottom: 16 }}>
+                                    <Text style={styles.label}>
                                         Title *
                                     </Text>
                                     <AnimatedTextInput
-                                        style={{
-                                            backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(75, 85, 99, 0.5)',
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                        }}
+                                        style={styles.input}
                                         placeholder="Enter movie or series title"
                                         placeholderTextColor="#9ca3af"
                                         value={movie.title}
@@ -464,104 +451,90 @@ const AddMovieScreen = () => {
                                     />
                                 </View>
 
+                                {/* Poster URL Input */}
+                                <View style={{ marginBottom: 16 }}>
+                                    <Text style={styles.label}>
+                                        Poster URL (Optional)
+                                    </Text>
+                                    <AnimatedTextInput
+                                        style={styles.input}
+                                        placeholder="https://example.com/poster.jpg"
+                                        placeholderTextColor="#9ca3af"
+                                        value={movie.posterUrl}
+                                        onChangeText={(text) => handleChange('posterUrl', text)}
+                                        keyboardType="url"
+                                    />
+                                </View>
+
+                                {/* Preview of poster if URL exists */}
+                                {movie.posterUrl ? (
+                                    <View style={{ marginBottom: 16, alignItems: 'center' }}>
+                                        <Text style={[styles.label, { marginBottom: 8 }]}>
+                                            Poster Preview
+                                        </Text>
+                                        <Image
+                                            source={{ uri: movie.posterUrl }}
+                                            style={{
+                                                width: 100,
+                                                height: 150,
+                                                borderRadius: 8,
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.5)',
+                                            }}
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+                                ) : null}
+
                                 {/* Type & Genre Row */}
-                                <View style={{
-                                    flexDirection: 'row',
-                                    marginBottom: 20,
-                                    gap: 12,
-                                }}>
+                                <View style={styles.rowContainer}>
                                     {/* Type Selector */}
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            marginBottom: 8,
-                                        }}>
+                                    <View style={styles.halfInput}>
+                                        <Text style={styles.label}>
                                             Type
                                         </Text>
                                         <TouchableOpacity
                                             onPress={() => setShowTypeModal(true)}
-                                            style={{
-                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(75, 85, 99, 0.5)',
-                                                padding: 16,
-                                                borderRadius: 12,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                            }}
+                                            style={styles.selector}
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                 <Text style={{ fontSize: 16, marginRight: 8 }}>
                                                     {getTypeIcon(movie.type)}
                                                 </Text>
-                                                <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                                <Text style={{ color: '#ffffff', fontSize: isSmallDevice ? 14 : 16 }}>
                                                     {movie.type}
                                                 </Text>
                                             </View>
-                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                            <Text style={{ color: '#9ca3af', fontSize: 12 }}>▼</Text>
                                         </TouchableOpacity>
                                     </View>
 
                                     {/* Genre Selector */}
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            marginBottom: 8,
-                                        }}>
+                                    <View style={styles.halfInput}>
+                                        <Text style={styles.label}>
                                             Genre
                                         </Text>
                                         <TouchableOpacity
                                             onPress={() => setShowGenreModal(true)}
-                                            style={{
-                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(75, 85, 99, 0.5)',
-                                                padding: 16,
-                                                borderRadius: 12,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                            }}
+                                            style={styles.selector}
                                         >
-                                            <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                            <Text style={{ color: '#ffffff', fontSize: isSmallDevice ? 14 : 16 }}>
                                                 {movie.genre}
                                             </Text>
-                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                            <Text style={{ color: '#9ca3af', fontSize: 12 }}>▼</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
 
                                 {/* Release Year & Status Row */}
-                                <View style={{
-                                    flexDirection: 'row',
-                                    marginBottom: 20,
-                                    gap: 12,
-                                }}>
+                                <View style={styles.rowContainer}>
                                     {/* Release Year */}
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            marginBottom: 8,
-                                        }}>
+                                    <View style={styles.halfInput}>
+                                        <Text style={styles.label}>
                                             Release Year
                                         </Text>
                                         <AnimatedTextInput
-                                            style={{
-                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(75, 85, 99, 0.5)',
-                                                padding: 16,
-                                                borderRadius: 12,
-                                                color: '#ffffff',
-                                                fontSize: 16,
-                                            }}
+                                            style={styles.input}
                                             placeholder="2024"
                                             placeholderTextColor="#9ca3af"
                                             value={movie.releaseYear.toString()}
@@ -571,69 +544,41 @@ const AddMovieScreen = () => {
                                     </View>
 
                                     {/* Status Selector */}
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            marginBottom: 8,
-                                        }}>
+                                    <View style={styles.halfInput}>
+                                        <Text style={styles.label}>
                                             Status
                                         </Text>
                                         <TouchableOpacity
                                             onPress={() => setShowStatusModal(true)}
-                                            style={{
-                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(75, 85, 99, 0.5)',
-                                                padding: 16,
-                                                borderRadius: 12,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                            }}
+                                            style={styles.selector}
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                 <Text style={{ fontSize: 14, marginRight: 6 }}>
                                                     {getStatusIcon(movie.status)}
                                                 </Text>
-                                                <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                                <Text style={{ color: '#ffffff', fontSize: isSmallDevice ? 14 : 16 }}>
                                                     {movie.status}
                                                 </Text>
                                             </View>
-                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                            <Text style={{ color: '#9ca3af', fontSize: 12 }}>▼</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
 
                                 {/* Description Input */}
                                 <View style={{ marginBottom: 20 }}>
-                                    <Text style={{
-                                        color: '#ffffff',
-                                        fontSize: 16,
-                                        fontWeight: '600',
-                                        marginBottom: 8,
-                                    }}>
+                                    <Text style={styles.label}>
                                         Description (Optional)
                                     </Text>
                                     <AnimatedTextInput
-                                        style={{
-                                            backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(75, 85, 99, 0.5)',
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            color: '#ffffff',
-                                            fontSize: 16,
-                                            height: 100,
-                                            textAlignVertical: 'top',
-                                        }}
+                                        style={[styles.input, { height: 100 }]}
                                         placeholder="Add your thoughts or notes..."
                                         placeholderTextColor="#9ca3af"
                                         value={movie.description}
                                         onChangeText={(text) => handleChange('description', text)}
                                         multiline
                                         numberOfLines={4}
+                                        textAlignVertical="top"
                                     />
                                 </View>
 
@@ -645,18 +590,7 @@ const AddMovieScreen = () => {
                                 >
                                     <LinearGradient
                                         colors={loading ? ['#6b7280', '#4b5563'] : ['#e50914', '#b8070f']}
-                                        style={{
-                                            padding: 18,
-                                            borderRadius: 16,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            shadowColor: '#e50914',
-                                            shadowOffset: { width: 0, height: 4 },
-                                            shadowOpacity: 0.3,
-                                            shadowRadius: 8,
-                                            elevation: 8,
-                                        }}
+                                        style={styles.saveButton}
                                     >
                                         <Text style={{
                                             fontSize: 20,
@@ -665,11 +599,7 @@ const AddMovieScreen = () => {
                                         }}>
                                             {isNew ? '🎬' : '✏️'}
                                         </Text>
-                                        <Text style={{
-                                            color: '#ffffff',
-                                            fontSize: 18,
-                                            fontWeight: 'bold',
-                                        }}>
+                                        <Text style={styles.saveButtonText}>
                                             {loading ? 'Saving...' : (isNew ? 'Add to Collection' : 'Update Movie')}
                                         </Text>
                                     </LinearGradient>
@@ -710,38 +640,155 @@ const AddMovieScreen = () => {
                 />
 
                 {/* Loading Modal */}
-                <Modal transparent visible={loading} animationType="fade">
-                    <BlurView intensity={50} style={{ flex: 1 }}>
-                        <View style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                        }}>
-                            <View style={{
-                                backgroundColor: '#1f2937',
-                                padding: 32,
-                                borderRadius: 20,
-                                alignItems: 'center',
-                                borderWidth: 1,
-                                borderColor: 'rgba(75, 85, 99, 0.3)',
-                            }}>
-                                <ActivityIndicator size="large" color="#e50914" />
-                                <Text style={{
-                                    color: '#ffffff',
-                                    fontSize: 18,
-                                    marginTop: 16,
-                                    fontWeight: '600',
-                                }}>
-                                    Adding to your collection...
-                                </Text>
-                            </View>
-                        </View>
-                    </BlurView>
-                </Modal>
+                <Loader visible={loading} />
             </LinearGradient>
         </>
     );
 };
+
+const styles = StyleSheet.create({
+    label: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: 'rgba(31, 41, 55, 0.8)',
+        borderWidth: 1,
+        borderColor: 'rgba(75, 85, 99, 0.5)',
+        padding: 16,
+        borderRadius: 12,
+        color: '#ffffff',
+        fontSize: 16,
+    },
+    selector: {
+        backgroundColor: 'rgba(31, 41, 55, 0.8)',
+        borderWidth: 1,
+        borderColor: 'rgba(75, 85, 99, 0.5)',
+        padding: 16,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    rowContainer: {
+        flexDirection: 'row',
+        marginBottom: 16,
+        gap: 12,
+    },
+    halfInput: {
+        flex: 1,
+    },
+    saveButton: {
+        padding: 18,
+        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#e50914',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    saveButtonText: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+
+    // Modal Styles - Fixed for Android
+    modalContainer: {
+        position: 'absolute' , top:0, bottom:0, left:0, right:0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        maxHeight: '70%',
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 10,
+    },
+    modalGradient: {
+        top:0, bottom:0, left:0, right:0,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(75, 85, 99, 0.3)',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(75, 85, 99, 0.3)',
+    },
+    modalTitle: {
+        color: '#ffffff',
+        fontSize: isSmallDevice ? 18 : 20,
+        fontWeight: 'bold',
+        flex: 1,
+        textAlign: 'center',
+    },
+    closeButton: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: 'rgba(75, 85, 99, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#9ca3af',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    optionsContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+        maxHeight: 300,
+    },
+    optionItem: {
+        padding: 16,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: 56,
+    },
+    optionIcon: {
+        fontSize: 20,
+        marginRight: 12,
+    },
+    optionText: {
+        fontSize: isSmallDevice ? 14 : 16,
+        flex: 1,
+    },
+    selectedIcon: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    cancelButton: {
+        marginHorizontal: 20,
+        marginVertical: 16,
+        padding: 14,
+        backgroundColor: 'rgba(75, 85, 99, 0.5)',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(75, 85, 99, 0.3)',
+    },
+    cancelButtonText: {
+        color: '#9ca3af',
+        textAlign: 'center',
+        fontSize: isSmallDevice ? 14 : 16,
+        fontWeight: '600',
+    },
+
+});
 
 export default AddMovieScreen;
