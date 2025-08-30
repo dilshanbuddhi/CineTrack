@@ -24,8 +24,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get('window');
+
 
 // Sample data (replace with Firebase data)
 const sampleMovies = [
@@ -84,6 +86,8 @@ const MovieTrackerHome = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [movies, setMovies] = useState(sampleMovies);
+    const router = useRouter();
+
 
     // Animation values
     const fadeAnim = useSharedValue(0);
@@ -486,6 +490,8 @@ const MovieTrackerHome = () => {
 
                     {/* Floating Action Button */}
                     <AnimatedTouchableOpacity
+                        onPress={() => router.push(`/movies/add`)}
+
                         style={[
                             fabStyle,
                             {

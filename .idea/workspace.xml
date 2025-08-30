@@ -5,9 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b796eb89-0274-49bd-95de-716500710a45" name="Changes" comment="first">
+      <change afterPath="$PROJECT_DIR$/app/(dashboard)/movies/[id].tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(auth)/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/login.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/home.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(dashboard)/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/home.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(dashboard)/tasks/[id].tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(dashboard)/tasks/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/movies/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(dashboard)/tasks/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/movies/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,7 +56,7 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/react native/CineTrack/app",
+    "last_opened_file_path": "D:/react native/CineTrack/app/(dashboard)/tasks",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -74,6 +81,7 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\react native\CineTrack\app\(dashboard)\tasks" />
       <recent name="D:\react native\CineTrack\app" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -99,6 +107,7 @@
       <workItem from="1756443951787" duration="1412000" />
       <workItem from="1756445416802" duration="345000" />
       <workItem from="1756530476612" duration="5499000" />
+      <workItem from="1756561648307" duration="1423000" />
     </task>
     <task id="LOCAL-00001" summary="first">
       <option name="closed" value="true" />

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "amd-day-01",
-    "slug": "amd-day-01",
+    "name": "cine_track",
+    "slug": "cine_track",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "amdday01",
+    "scheme": "cinetrack",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
