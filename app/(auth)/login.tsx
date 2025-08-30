@@ -1,4 +1,3 @@
-
 import {
     View,
     Text,
@@ -28,6 +27,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Loader from "@/components/Loader";
 
 const { width, height } = Dimensions.get('window');
 
@@ -455,40 +455,7 @@ const Login = () => {
                 </KeyboardAvoidingView>
 
                 {/* Loading Modal */}
-                <Modal
-                    transparent
-                    animationType="fade"
-                    visible={loading}
-                    onRequestClose={() => {}}
-                >
-                    <BlurView intensity={50} style={{ flex: 1 }}>
-                        <View style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(0, 0, 0, 0.6)'
-                        }}>
-                            <View style={{
-                                backgroundColor: '#1f2937',
-                                padding: 32,
-                                borderRadius: 16,
-                                alignItems: 'center',
-                                borderWidth: 1,
-                                borderColor: '#374151'
-                            }}>
-                                <ActivityIndicator size="large" color="#e50914" />
-                                <Text style={{
-                                    color: '#ffffff',
-                                    fontSize: 18,
-                                    marginTop: 16,
-                                    fontWeight: '600'
-                                }}>
-                                    Signing you in...
-                                </Text>
-                            </View>
-                        </View>
-                    </BlurView>
-                </Modal>
+                <Loader visible={loading}/>
             </LinearGradient>
         </>
     );

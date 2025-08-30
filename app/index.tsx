@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native"
 import React, { useEffect } from "react"
 import { useRouter } from "expo-router"
 import { useAuth } from "@/context/AuthContext"
+import Loader from "@/components/Loader";
 
 const Index = () => {
   const router = useRouter()
@@ -17,9 +18,7 @@ const Index = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 w-full justify-center align-items-center">
-        <ActivityIndicator size="large" />
-      </View>
+      <Loader visible={true}/>
     )
   }
 
