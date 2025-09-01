@@ -384,9 +384,11 @@ const AddMovieScreen = () => {
                                                 onValueChange={(value) => handleChange('type', value)}
                                                 style={styles.picker}
                                                 dropdownIconColor="#ffffff"
+
                                             >
                                                 {types.map((type) => (
                                                     <Picker.Item
+                                                        style={{ backgroundColor: '#1A202C' , margin:10 , borderColor : 'rgba(0,78,183,0.5)'}}
                                                         key={type}
                                                         label={type}
                                                         value={type}
@@ -411,6 +413,7 @@ const AddMovieScreen = () => {
                                             >
                                                 {genres.map((genre) => (
                                                     <Picker.Item
+                                                        style={{ backgroundColor: '#1A202C' , margin:10}}
                                                         key={genre}
                                                         label={genre}
                                                         value={genre}
@@ -446,6 +449,7 @@ const AddMovieScreen = () => {
                                         </Text>
                                         <View style={styles.pickerContainer}>
                                             <Picker
+
                                                 selectedValue={movie.status}
                                                 onValueChange={(value) => handleChange('status', value)}
                                                 style={styles.picker}
@@ -453,10 +457,11 @@ const AddMovieScreen = () => {
                                             >
                                                 {statuses.map((status) => (
                                                     <Picker.Item
+                                                        style={{ backgroundColor: '#1A202C'}}
                                                         key={status}
                                                         label={status}
                                                         value={status}
-                                                        color={movie.status === status ? '#fff' : '#9ca3af'}
+                                                        color={movie.status === status ? '#1e8fdc' : '#9ca3af'}
                                                     />
                                                 ))}
                                             </Picker>
