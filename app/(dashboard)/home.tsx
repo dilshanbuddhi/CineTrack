@@ -10,6 +10,7 @@ import {
     Dimensions,
     FlatList,
     RefreshControl,
+    Alert,
 } from 'react-native';
 import Animated, {
     useSharedValue,
@@ -24,13 +25,23 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { useRouter } from "expo-router";
+import { useRouter } from 'expo-router';
+import MovieActionModal from '@/components/MovieActionModel';
 
 const { width, height } = Dimensions.get('window');
 
-
 // Sample data (replace with Firebase data)
-const sampleMovies = [
+interface MovieSeries {
+    id: string;
+    title: string;
+    genre: string;
+    releaseYear: number;
+    status: string;
+    type: string;
+    posterUrl: string;
+}
+
+const sampleMovies: MovieSeries[] = [
     {
         id: 'm001',
         title: 'Inception',
@@ -86,8 +97,9 @@ const MovieTrackerHome = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [movies, setMovies] = useState(sampleMovies);
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [selectedMovie, setSelectedMovie] = useState<MovieSeries | null>(null);
     const router = useRouter();
-
 
     // Animation values
     const fadeAnim = useSharedValue(0);
@@ -115,28 +127,19 @@ const MovieTrackerHome = () => {
 
         // Floating particles animation
         particle1.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 3000 }),
-                withTiming(0, { duration: 3000 })
-            ),
+            withSequence(withTiming(1, { duration: 3000 }), withTiming(0, { duration: 3000 })),
             -1,
             true
         );
 
         particle2.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 2500 }),
-                withTiming(0, { duration: 2500 })
-            ),
+            withSequence(withTiming(1, { duration: 2500 }), withTiming(0, { duration: 2500 })),
             -1,
             true
         );
 
         particle3.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 3500 }),
-                withTiming(0, { duration: 3500 })
-            ),
+            withSequence(withTiming(1, { duration: 3500 }), withTiming(0, { duration: 3500 })),
             -1,
             true
         );
@@ -144,33 +147,79 @@ const MovieTrackerHome = () => {
 
     const onRefresh = () => {
         setRefreshing(true);
-        // Simulate API call
         setTimeout(() => {
             setRefreshing(false);
         }, 1500);
     };
 
-    const filteredMovies = movies.filter(movie => {
+    const handleDeleteMovie = (movieId: string) => {
+        Alert.alert(
+            'Delete Movie',
+            'Are you sure you want to remove this movie from your collection?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                        setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+                        setShowActionModal(false);
+                        setSelectedMovie(null);
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleChangeStatus = (movieId: string, newStatus: string) => {
+        setMovies((prevMovies) =>
+            prevMovies.map((movie) =>
+                movie.id === movieId ? { ...movie, status: newStatus } : movie
+            )
+        );
+        setShowActionModal(false);
+        setSelectedMovie(null);
+    };
+
+    const openActionModal = (movie: MovieSeries) => {
+        setSelectedMovie(movie);
+        setShowActionModal(true);
+    };
+
+    const closeActionModal = () => {
+        setShowActionModal(false);
+        setSelectedMovie(null);
+    };
+
+    const filteredMovies = movies.filter((movie) => {
         const matchesTab = movie.status === activeTab;
         const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesTab && matchesSearch;
     });
 
-    const getStatusColor = (status : string) => {
+    const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Watchlist': return '#f59e0b';
-            case 'Watching': return '#10b981';
-            case 'Watched': return '#6366f1';
-            default: return '#9ca3af';
+            case 'Watchlist':
+                return '#f59e0b';
+            case 'Watching':
+                return '#10b981';
+            case 'Watched':
+                return '#6366f1';
+            default:
+                return '#9ca3af';
         }
     };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'Watchlist': return '📋';
-            case 'Watching': return '👀';
-            case 'Watched': return '✅';
-            default: return '📱';
+            case 'Watchlist':
+                return '📋';
+            case 'Watching':
+                return '👀';
+            case 'Watched':
+                return '✅';
+            default:
+                return '📱';
         }
     };
 
@@ -195,7 +244,7 @@ const MovieTrackerHome = () => {
     const cardStyle = useAnimatedStyle(() => ({
         opacity: cardAnimations.value,
         transform: [
-            { translateY: interpolate(cardAnimations.value, [0, 1], [20, 0], Extrapolate.CLAMP) }
+            { translateY: interpolate(cardAnimations.value, [0, 1], [20, 0], Extrapolate.CLAMP) },
         ],
     }));
 
@@ -203,27 +252,27 @@ const MovieTrackerHome = () => {
         opacity: interpolate(particle1.value, [0, 1], [0.3, 0.8]),
         transform: [
             { translateY: interpolate(particle1.value, [0, 1], [0, -100]) },
-            { translateX: interpolate(particle1.value, [0, 1], [0, 30]) }
-        ]
+            { translateX: interpolate(particle1.value, [0, 1], [0, 30]) },
+        ],
     }));
 
     const particle2Style = useAnimatedStyle(() => ({
         opacity: interpolate(particle2.value, [0, 1], [0.2, 0.6]),
         transform: [
             { translateY: interpolate(particle2.value, [0, 1], [0, -80]) },
-            { translateX: interpolate(particle2.value, [0, 1], [0, -50]) }
-        ]
+            { translateX: interpolate(particle2.value, [0, 1], [0, -50]) },
+        ],
     }));
 
     const particle3Style = useAnimatedStyle(() => ({
         opacity: interpolate(particle3.value, [0, 1], [0.4, 0.9]),
         transform: [
             { translateY: interpolate(particle3.value, [0, 1], [0, -120]) },
-            { translateX: interpolate(particle3.value, [0, 1], [0, 20]) }
-        ]
-    }))
+            { translateX: interpolate(particle3.value, [0, 1], [0, 20]) },
+        ],
+    }));
 
-    const MovieCard = ({ movie, index }: { movie: any, index: number }) => (
+    const MovieCard = ({ movie, index }: { movie: MovieSeries; index: number }) => (
         <Animated.View style={[cardStyle, { marginHorizontal: 16, marginBottom: 16 }]}>
             <TouchableOpacity>
                 <BlurView intensity={20} style={{ borderRadius: 16, overflow: 'hidden' }}>
@@ -237,14 +286,15 @@ const MovieTrackerHome = () => {
                             borderColor: 'rgba(75, 85, 99, 0.3)',
                         }}
                     >
-                        {/* Poster */}
-                        <View style={{
-                            width: 80,
-                            height: 120,
-                            borderRadius: 12,
-                            overflow: 'hidden',
-                            backgroundColor: '#374151',
-                        }}>
+                        <View
+                            style={{
+                                width: 80,
+                                height: 120,
+                                borderRadius: 12,
+                                overflow: 'hidden',
+                                backgroundColor: '#374151',
+                            }}
+                        >
                             <Image
                                 source={{ uri: movie.posterUrl }}
                                 style={{ width: '100%', height: '100%' }}
@@ -252,18 +302,18 @@ const MovieTrackerHome = () => {
                             />
                         </View>
 
-                        {/* Movie Details */}
                         <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
                             <View>
-                                <Text style={{
-                                    color: '#ffffff',
-                                    fontSize: 18,
-                                    fontWeight: 'bold',
-                                    marginBottom: 4,
-                                }}>
+                                <Text
+                                    style={{
+                                        color: '#ffffff',
+                                        fontSize: 18,
+                                        fontWeight: 'bold',
+                                        marginBottom: 4,
+                                    }}
+                                >
                                     {movie.title}
                                 </Text>
-
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                                     <Text style={{ color: '#9ca3af', fontSize: 14 }}>
                                         {movie.genre} • {movie.releaseYear} • {movie.type}
@@ -271,16 +321,17 @@ const MovieTrackerHome = () => {
                                 </View>
                             </View>
 
-                            {/* Status Badge */}
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <View style={{
-                                    backgroundColor: getStatusColor(movie.status),
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 6,
-                                    borderRadius: 20,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                }}>
+                                <View
+                                    style={{
+                                        backgroundColor: getStatusColor(movie.status),
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 20,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                    }}
+                                >
                                     <Text style={{ fontSize: 12, marginRight: 4, color: '#ffffff' }}>
                                         {getStatusIcon(movie.status)}
                                     </Text>
@@ -289,12 +340,17 @@ const MovieTrackerHome = () => {
                                     </Text>
                                 </View>
 
-                                <TouchableOpacity style={{
-                                    backgroundColor: `rgba(239, ${200 + index * 10}, ${200 + index * 10}, 0.2)`,
-                                    padding: 8,
-                                    borderRadius: 8,
-                                }}>
-                                    <Text style={{ color: `#ef${44 + index * 10}${44 + index * 10}`, fontSize: 16 }}>⋯</Text>
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                                        padding: 8,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(229, 9, 20, 0.3)',
+                                    }}
+                                    onPress={() => openActionModal(movie)}
+                                >
+                                    <Text style={{ color: '#ef4444', fontSize: 16 }}>⋯</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -303,93 +359,83 @@ const MovieTrackerHome = () => {
             </TouchableOpacity>
         </Animated.View>
     );
+
     return (
         <>
             <StatusBar barStyle="light-content" backgroundColor="#000000" />
-
-            {/* Background */}
-            <LinearGradient
-                colors={['#000000', '#111827', '#000000']}
-                style={{ flex: 1 }}
-            >
-                {/* Floating Particles */}
-                <Animated.View style={[
-                    {
-                        position: 'absolute',
-                        top: height * 0.1,
-                        left: width * 0.8,
-                        width: 10,
-                        height: 10,
-                        backgroundColor: '#e50914',
-                        borderRadius: 5,
-                    },
-                    particle1Style
-                ]} />
-
-                <Animated.View style={[
-                    {
-                        position: 'absolute',
-                        top: height * 0.3,
-                        left: width * 0.1,
-                        width: 6,
-                        height: 6,
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 3,
-                    },
-                    particle2Style
-                ]} />
-
-                <Animated.View style={[
-                    {
-                        position: 'absolute',
-                        top: height * 0.5,
-                        left: width * 0.9,
-                        width: 8,
-                        height: 8,
-                        backgroundColor: '#10b981',
-                        borderRadius: 4,
-                    },
-                    particle3Style
-                ]} />
-
+            <LinearGradient colors={['#000000', '#111827', '#000000']} style={{ flex: 1 }}>
                 <Animated.View style={[{ flex: 1 }, containerStyle]}>
+                    {/* Floating Particles */}
+                    <Animated.View
+                        style={[
+                            {
+                                position: 'absolute',
+                                top: height * 0.1,
+                                left: width * 0.8,
+                                width: 10,
+                                height: 10,
+                                backgroundColor: '#e50914',
+                                borderRadius: 5,
+                            },
+                            particle1Style,
+                        ]}
+                    />
+                    <Animated.View
+                        style={[
+                            {
+                                position: 'absolute',
+                                top: height * 0.3,
+                                left: width * 0.1,
+                                width: 6,
+                                height: 6,
+                                backgroundColor: '#f59e0b',
+                                borderRadius: 3,
+                            },
+                            particle2Style,
+                        ]}
+                    />
+                    <Animated.View
+                        style={[
+                            {
+                                position: 'absolute',
+                                top: height * 0.5,
+                                left: width * 0.9,
+                                width: 8,
+                                height: 8,
+                                backgroundColor: '#10b981',
+                                borderRadius: 4,
+                            },
+                            particle3Style,
+                        ]}
+                    />
 
                     {/* Header */}
-                    <View style={{
-                        paddingTop: 50,
-                        paddingHorizontal: 20,
-                        paddingBottom: 20,
-                    }}>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: 20,
-                        }}>
+                    <View style={{ paddingTop: 50, paddingHorizontal: 20, paddingBottom: 20 }}>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 20,
+                            }}
+                        >
                             <View>
-                                <Text style={{
-                                    color: '#ffffff',
-                                    fontSize: 28,
-                                    fontWeight: 'bold',
-                                }}>
+                                <Text style={{ color: '#ffffff', fontSize: 28, fontWeight: 'bold' }}>
                                     My Collection
                                 </Text>
-                                <Text style={{
-                                    color: '#9ca3af',
-                                    fontSize: 16,
-                                    marginTop: 4,
-                                }}>
+                                <Text style={{ color: '#9ca3af', fontSize: 16, marginTop: 4 }}>
                                     Track your favorite movies & series
                                 </Text>
                             </View>
-
-                            <TouchableOpacity style={{
-                                backgroundColor: 'rgba(229, 9, 20, 0.2)',
-                                padding: 12,
-                                borderRadius: 12,
-                                borderWidth: 1,
-                                borderColor: 'rgba(229, 9, 20, 0.3)',
-                            }}>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                                    padding: 12,
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(229, 9, 20, 0.3)',
+                                }}
+                            >
                                 <Text style={{ fontSize: 20 }}>🔔</Text>
                             </TouchableOpacity>
                         </View>
@@ -406,7 +452,7 @@ const MovieTrackerHome = () => {
                                     borderRadius: 12,
                                     color: '#ffffff',
                                     fontSize: 16,
-                                }
+                                },
                             ]}
                             placeholder="Search movies & series..."
                             placeholderTextColor="#9ca3af"
@@ -417,12 +463,14 @@ const MovieTrackerHome = () => {
 
                     {/* Tabs */}
                     <Animated.View style={[tabStyle, { paddingHorizontal: 20, marginBottom: 20 }]}>
-                        <View style={{
-                            flexDirection: 'row',
-                            backgroundColor: 'rgba(31, 41, 55, 0.6)',
-                            borderRadius: 12,
-                            padding: 4,
-                        }}>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                backgroundColor: 'rgba(31, 41, 55, 0.6)',
+                                borderRadius: 12,
+                                padding: 4,
+                            }}
+                        >
                             {tabs.map((tab) => (
                                 <TouchableOpacity
                                     key={tab}
@@ -434,12 +482,14 @@ const MovieTrackerHome = () => {
                                         backgroundColor: activeTab === tab ? '#e50914' : 'transparent',
                                     }}
                                 >
-                                    <Text style={{
-                                        color: activeTab === tab ? '#ffffff' : '#9ca3af',
-                                        textAlign: 'center',
-                                        fontSize: 16,
-                                        fontWeight: activeTab === tab ? 'bold' : 'normal',
-                                    }}>
+                                    <Text
+                                        style={{
+                                            color: activeTab === tab ? '#ffffff' : '#9ca3af',
+                                            textAlign: 'center',
+                                            fontSize: 16,
+                                            fontWeight: activeTab === tab ? 'bold' : 'normal',
+                                        }}
+                                    >
                                         {getStatusIcon(tab)} {tab}
                                     </Text>
                                 </TouchableOpacity>
@@ -462,25 +512,12 @@ const MovieTrackerHome = () => {
                             />
                         }
                         ListEmptyComponent={() => (
-                            <View style={{
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 60,
-                            }}>
+                            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
                                 <Text style={{ fontSize: 60, marginBottom: 16 }}>🎬</Text>
-                                <Text style={{
-                                    color: '#9ca3af',
-                                    fontSize: 18,
-                                    textAlign: 'center',
-                                }}>
+                                <Text style={{ color: '#9ca3af', fontSize: 18, textAlign: 'center' }}>
                                     No {activeTab.toLowerCase()} movies yet
                                 </Text>
-                                <Text style={{
-                                    color: '#6b7280',
-                                    fontSize: 14,
-                                    textAlign: 'center',
-                                    marginTop: 8,
-                                }}>
+                                <Text style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 8 }}>
                                     Add some movies to get started!
                                 </Text>
                             </View>
@@ -491,7 +528,6 @@ const MovieTrackerHome = () => {
                     {/* Floating Action Button */}
                     <AnimatedTouchableOpacity
                         onPress={() => router.push(`/movies/new`)}
-
                         style={[
                             fabStyle,
                             {
@@ -506,7 +542,7 @@ const MovieTrackerHome = () => {
                                 shadowOpacity: 0.3,
                                 shadowRadius: 8,
                                 elevation: 8,
-                            }
+                            },
                         ]}
                     >
                         <LinearGradient
@@ -523,6 +559,15 @@ const MovieTrackerHome = () => {
                         </LinearGradient>
                     </AnimatedTouchableOpacity>
                 </Animated.View>
+
+                {/* Movie Action Modal */}
+                <MovieActionModal
+                    visible={showActionModal}
+                    movie={selectedMovie}
+                    onClose={closeActionModal}
+                    onStatusChange={handleChangeStatus}
+                    onDelete={handleDeleteMovie}
+                />
             </LinearGradient>
         </>
     );
