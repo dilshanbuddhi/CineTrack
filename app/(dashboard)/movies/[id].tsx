@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Picker } from '@react-native-picker/picker';
 import {
     View,
     Text,
@@ -8,11 +7,12 @@ import {
     ScrollView,
     StatusBar,
     Dimensions,
+    Modal,
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     Alert,
     Image,
-    StyleSheet,
 } from 'react-native';
 import Animated, {
     useSharedValue,
@@ -21,14 +21,16 @@ import Animated, {
     withSpring,
     withDelay,
     interpolate,
+    Extrapolate,
+    withRepeat,
     withSequence,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Loader from "@/components/Loader";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get('window');
-const isSmallDevice = width < 375;
 
 // Movie/Series interface
 interface MovieSeries {
@@ -70,6 +72,11 @@ const AddMovieScreen = () => {
     });
 
     const [loading, setLoading] = useState(false);
+    const [showGenreModal, setShowGenreModal] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [showTypeModal, setShowTypeModal] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     // Animation values
     const fadeAnim = useSharedValue(0);
@@ -77,6 +84,7 @@ const AddMovieScreen = () => {
     const headerAnim = useSharedValue(0);
     const formAnim = useSharedValue(0);
     const buttonAnim = useSharedValue(1);
+    const posterAnim = useSharedValue(0);
 
     // Background particles
     const particle1 = useSharedValue(0);
@@ -91,24 +99,59 @@ const AddMovieScreen = () => {
         formAnim.value = withDelay(500, withTiming(1, { duration: 600 }));
 
         // Floating particles animation
-        particle1.value = withSequence(
-            withTiming(1, { duration: 3000 }),
-            withTiming(0, { duration: 3000 })
+        particle1.value = withRepeat(
+            withSequence(
+                withTiming(1, { duration: 3000 }),
+                withTiming(0, { duration: 3000 })
+            ),
+            -1,
+            true
         );
 
-        particle2.value = withSequence(
-            withTiming(1, { duration: 2500 }),
-            withTiming(0, { duration: 2500 })
+        particle2.value = withRepeat(
+            withSequence(
+                withTiming(1, { duration: 2500 }),
+                withTiming(0, { duration: 2500 })
+            ),
+            -1,
+            true
         );
 
-        particle3.value = withSequence(
-            withTiming(1, { duration: 3500 }),
-            withTiming(0, { duration: 3500 })
+        particle3.value = withRepeat(
+            withSequence(
+                withTiming(1, { duration: 3500 }),
+                withTiming(0, { duration: 3500 })
+            ),
+            -1,
+            true
         );
     }, []);
 
+    // Animate poster when URL changes
+    useEffect(() => {
+        if (movie.posterUrl && !imageError) {
+            posterAnim.value = withSpring(1, { damping: 15, stiffness: 100 });
+        } else {
+            posterAnim.value = withTiming(0, { duration: 300 });
+        }
+    }, [movie.posterUrl, imageError]);
+
     const handleChange = (key: keyof MovieSeries, value: string | number) => {
+        if (key === 'posterUrl') {
+            setImageError(false);
+            setImageLoading(true);
+        }
         setMovie(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleImageLoad = () => {
+        setImageLoading(false);
+        setImageError(false);
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        setImageError(true);
     };
 
     const handleSubmit = async () => {
@@ -191,6 +234,11 @@ const AddMovieScreen = () => {
         transform: [{ scale: buttonAnim.value }],
     }));
 
+    const posterStyle = useAnimatedStyle(() => ({
+        opacity: posterAnim.value,
+        transform: [{ scale: posterAnim.value }],
+    }));
+
     const particle1Style = useAnimatedStyle(() => ({
         opacity: interpolate(particle1.value, [0, 1], [0.3, 0.8]),
         transform: [
@@ -214,6 +262,108 @@ const AddMovieScreen = () => {
             { translateX: interpolate(particle3.value, [0, 1], [0, 20]) }
         ]
     }));
+
+    const ModalSelector = ({
+                               visible,
+                               onClose,
+                               title,
+                               options,
+                               selectedValue,
+                               onSelect,
+                               getIcon
+                           }: {
+        visible: boolean;
+        onClose: () => void;
+        title: string;
+        options: string[];
+        selectedValue: string;
+        onSelect: (value: string) => void;
+        getIcon?: (value: string) => string;
+    }) => (
+        <SafeAreaView>
+            <Modal transparent visible={visible} animationType="fade">
+                <BlurView intensity={50} style={{ flex: 1 }}>
+                    <View style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }}>
+                        <View style={{
+                            backgroundColor: '#1f2937',
+                            borderRadius: 20,
+                            padding: 20,
+                            width: width * 0.8,
+                            maxHeight: height * 0.6,
+                            borderWidth: 1,
+                            borderColor: 'rgba(75, 85, 99, 0.3)',
+                        }}>
+                            <Text style={{
+                                color: '#ffffff',
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                marginBottom: 20,
+                            }}>
+                                Select {title}
+                            </Text>
+
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {options.map((option) => (
+                                    <TouchableOpacity
+                                        key={option}
+                                        onPress={() => {
+                                            onSelect(option);
+                                            onClose();
+                                        }}
+                                        style={{
+                                            padding: 16,
+                                            borderRadius: 12,
+                                            marginBottom: 8,
+                                            backgroundColor: selectedValue === option ? '#e50914' : 'rgba(55, 65, 81, 0.5)',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        {getIcon && (
+                                            <Text style={{ fontSize: 20, marginRight: 12 }}>
+                                                {getIcon(option)}
+                                            </Text>
+                                        )}
+                                        <Text style={{
+                                            color: selectedValue === option ? '#ffffff' : '#9ca3af',
+                                            fontSize: 16,
+                                            fontWeight: selectedValue === option ? 'bold' : 'normal',
+                                        }}>
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={{
+                                    marginTop: 16,
+                                    padding: 12,
+                                    backgroundColor: 'rgba(75, 85, 99, 0.5)',
+                                    borderRadius: 12,
+                                }}
+                            >
+                                <Text style={{
+                                    color: '#9ca3af',
+                                    textAlign: 'center',
+                                    fontSize: 16,
+                                }}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </BlurView>
+            </Modal>
+        </SafeAreaView>
+    );
 
     return (
         <>
@@ -267,16 +417,16 @@ const AddMovieScreen = () => {
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1 }}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
                 >
                     <Animated.View style={[{ flex: 1 }, containerStyle]}>
+
                         {/* Header */}
                         <Animated.View style={[
                             headerStyle,
                             {
-                                paddingTop: isSmallDevice ? 40 : 50,
-                                paddingHorizontal: 16,
-                                paddingBottom: 16,
+                                paddingTop: 50,
+                                paddingHorizontal: 20,
+                                paddingBottom: 20,
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -286,49 +436,61 @@ const AddMovieScreen = () => {
                                 onPress={() => router.back()}
                                 style={{
                                     backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                    padding: 10,
+                                    padding: 12,
                                     borderRadius: 12,
                                     borderWidth: 1,
                                     borderColor: 'rgba(75, 85, 99, 0.3)',
                                 }}
                             >
-                                <Text style={{ color: '#ffffff', fontSize: 16 }}>←</Text>
+                                <Text style={{ color: '#ffffff', fontSize: 18 }}>←</Text>
                             </TouchableOpacity>
 
-                            <View style={{ alignItems: 'center', flex: 1, marginHorizontal: 10 }}>
+                            <View style={{ alignItems: 'center' }}>
                                 <Text style={{
                                     color: '#ffffff',
-                                    fontSize: isSmallDevice ? 20 : 24,
+                                    fontSize: 24,
                                     fontWeight: 'bold',
-                                    textAlign: 'center',
                                 }}>
                                     {isNew ? 'Add to Collection' : 'Edit Movie'}
                                 </Text>
                                 <Text style={{
                                     color: '#9ca3af',
-                                    fontSize: isSmallDevice ? 12 : 14,
+                                    fontSize: 14,
                                     marginTop: 4,
-                                    textAlign: 'center',
                                 }}>
                                     Track your cinema journey
                                 </Text>
                             </View>
 
-                            <View style={{ width: 40 }} />
+                            <View style={{ width: 44 }} />
                         </Animated.View>
 
                         <ScrollView
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
+                            contentContainerStyle={{ paddingBottom: 100 }}
                         >
-                            <Animated.View style={[formStyle]}>
+                            <Animated.View style={[{ paddingHorizontal: 20 }, formStyle]}>
+
                                 {/* Title Input */}
-                                <View style={{ marginBottom: 16 }}>
-                                    <Text style={styles.label}>
+                                <View style={{ marginBottom: 20 }}>
+                                    <Text style={{
+                                        color: '#ffffff',
+                                        fontSize: 16,
+                                        fontWeight: '600',
+                                        marginBottom: 8,
+                                    }}>
                                         Title *
                                     </Text>
                                     <AnimatedTextInput
-                                        style={styles.input}
+                                        style={{
+                                            backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(75, 85, 99, 0.5)',
+                                            padding: 16,
+                                            borderRadius: 12,
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                        }}
                                         placeholder="Enter movie or series title"
                                         placeholderTextColor="#9ca3af"
                                         value={movie.title}
@@ -337,103 +499,204 @@ const AddMovieScreen = () => {
                                 </View>
 
                                 {/* Poster URL Input */}
-                                <View style={{ marginBottom: 16 }}>
-                                    <Text style={styles.label}>
-                                        Poster URL (Optional)
+                                <View style={{ marginBottom: 20 }}>
+                                    <Text style={{
+                                        color: '#ffffff',
+                                        fontSize: 16,
+                                        fontWeight: '600',
+                                        marginBottom: 8,
+                                    }}>
+                                        Poster URL
                                     </Text>
                                     <AnimatedTextInput
-                                        style={styles.input}
+                                        style={{
+                                            backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(75, 85, 99, 0.5)',
+                                            padding: 16,
+                                            borderRadius: 12,
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                        }}
                                         placeholder="https://example.com/poster.jpg"
                                         placeholderTextColor="#9ca3af"
                                         value={movie.posterUrl}
                                         onChangeText={(text) => handleChange('posterUrl', text)}
-                                        keyboardType="url"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
                                     />
+
+                                    {/* Poster Preview */}
+                                    {movie.posterUrl && !imageError && (
+                                        <Animated.View style={[
+                                            {
+                                                marginTop: 12,
+                                                alignItems: 'center',
+                                                backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                                                borderRadius: 12,
+                                                padding: 16,
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.3)',
+                                            },
+                                            posterStyle
+                                        ]}>
+                                            <Text style={{
+                                                color: '#9ca3af',
+                                                fontSize: 14,
+                                                marginBottom: 8,
+                                            }}>
+                                                Poster Preview
+                                            </Text>
+
+                                            {imageLoading && (
+                                                <View style={{
+                                                    width: 120,
+                                                    height: 180,
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    backgroundColor: 'rgba(75, 85, 99, 0.3)',
+                                                    borderRadius: 8,
+                                                }}>
+                                                    <ActivityIndicator color="#e50914" size="small" />
+                                                    <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
+                                                        Loading...
+                                                    </Text>
+                                                </View>
+                                            )}
+
+                                            <Image
+                                                source={{ uri: movie.posterUrl }}
+                                                style={{
+                                                    width: 120,
+                                                    height: 180,
+                                                    borderRadius: 8,
+                                                    backgroundColor: 'rgba(75, 85, 99, 0.3)',
+                                                }}
+                                                onLoad={handleImageLoad}
+                                                onError={handleImageError}
+                                                resizeMode="cover"
+                                            />
+                                        </Animated.View>
+                                    )}
+
+                                    {imageError && movie.posterUrl && (
+                                        <View style={{
+                                            marginTop: 12,
+                                            padding: 12,
+                                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                            borderRadius: 8,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                                        }}>
+                                            <Text style={{
+                                                color: '#ef4444',
+                                                fontSize: 14,
+                                                textAlign: 'center',
+                                            }}>
+                                                ⚠️ Could not load image from this URL
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
 
-                                {/* Preview of poster if URL exists */}
-                                {movie.posterUrl ? (
-                                    <View style={{ marginBottom: 16, alignItems: 'center' }}>
-                                        <Text style={[styles.label, { marginBottom: 8 }]}>
-                                            Poster Preview
-                                        </Text>
-                                        <Image
-                                            source={{ uri: movie.posterUrl }}
-                                            style={{
-                                                width: 100,
-                                                height: 150,
-                                                borderRadius: 8,
-                                                borderWidth: 1,
-                                                borderColor: 'rgba(75, 85, 99, 0.5)',
-                                            }}
-                                            resizeMode="cover"
-                                        />
-                                    </View>
-                                ) : null}
-
                                 {/* Type & Genre Row */}
-                                <View style={styles.rowContainer}>
-                                    {/* Type Picker */}
-                                    <View style={styles.halfInput}>
-                                        <Text style={styles.label}>
+                                <View style={{
+                                    flexDirection: 'row',
+                                    marginBottom: 20,
+                                    gap: 12,
+                                }}>
+                                    {/* Type Selector */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                            marginBottom: 8,
+                                        }}>
                                             Type
                                         </Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={movie.type}
-                                                onValueChange={(value) => handleChange('type', value)}
-                                                style={styles.picker}
-                                                dropdownIconColor="#ffffff"
-
-                                            >
-                                                {types.map((type) => (
-                                                    <Picker.Item
-                                                        style={{ backgroundColor: '#1A202C' , margin:10 , borderColor : 'rgba(0,78,183,0.5)'}}
-                                                        key={type}
-                                                        label={type}
-                                                        value={type}
-                                                        color={movie.type === type ? '#fff' : '#9ca3af'}
-                                                    />
-                                                ))}
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => setShowTypeModal(true)}
+                                            style={{
+                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.5)',
+                                                padding: 16,
+                                                borderRadius: 12,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Text style={{ fontSize: 16, marginRight: 8 }}>
+                                                    {getTypeIcon(movie.type)}
+                                                </Text>
+                                                <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                                    {movie.type}
+                                                </Text>
+                                            </View>
+                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                        </TouchableOpacity>
                                     </View>
 
-                                    {/* Genre Picker */}
-                                    <View style={styles.halfInput}>
-                                        <Text style={styles.label}>
+                                    {/* Genre Selector */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                            marginBottom: 8,
+                                        }}>
                                             Genre
                                         </Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-                                                selectedValue={movie.genre}
-                                                onValueChange={(value) => handleChange('genre', value)}
-                                                style={styles.picker}
-                                                dropdownIconColor="#ffffff"
-                                            >
-                                                {genres.map((genre) => (
-                                                    <Picker.Item
-                                                        style={{ backgroundColor: '#1A202C' , margin:10}}
-                                                        key={genre}
-                                                        label={genre}
-                                                        value={genre}
-                                                        color={movie.genre === genre ? '#fff' : '#9ca3af'}
-                                                    />
-                                                ))}
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => setShowGenreModal(true)}
+                                            style={{
+                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.5)',
+                                                padding: 16,
+                                                borderRadius: 12,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                            }}
+                                        >
+                                            <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                                {movie.genre}
+                                            </Text>
+                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
 
                                 {/* Release Year & Status Row */}
-                                <View style={styles.rowContainer}>
+                                <View style={{
+                                    flexDirection: 'row',
+                                    marginBottom: 20,
+                                    gap: 12,
+                                }}>
                                     {/* Release Year */}
-                                    <View style={styles.halfInput}>
-                                        <Text style={styles.label}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                            marginBottom: 8,
+                                        }}>
                                             Release Year
                                         </Text>
                                         <AnimatedTextInput
-                                            style={styles.input}
+                                            style={{
+                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.5)',
+                                                padding: 16,
+                                                borderRadius: 12,
+                                                color: '#ffffff',
+                                                fontSize: 16,
+                                            }}
                                             placeholder="2024"
                                             placeholderTextColor="#9ca3af"
                                             value={movie.releaseYear.toString()}
@@ -442,47 +705,70 @@ const AddMovieScreen = () => {
                                         />
                                     </View>
 
-                                    {/* Status Picker */}
-                                    <View style={styles.halfInput}>
-                                        <Text style={styles.label}>
+                                    {/* Status Selector */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                            marginBottom: 8,
+                                        }}>
                                             Status
                                         </Text>
-                                        <View style={styles.pickerContainer}>
-                                            <Picker
-
-                                                selectedValue={movie.status}
-                                                onValueChange={(value) => handleChange('status', value)}
-                                                style={styles.picker}
-                                                dropdownIconColor="#ffffff"
-                                            >
-                                                {statuses.map((status) => (
-                                                    <Picker.Item
-                                                        style={{ backgroundColor: '#1A202C'}}
-                                                        key={status}
-                                                        label={status}
-                                                        value={status}
-                                                        color={movie.status === status ? '#1e8fdc' : '#9ca3af'}
-                                                    />
-                                                ))}
-                                            </Picker>
-                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => setShowStatusModal(true)}
+                                            style={{
+                                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(75, 85, 99, 0.5)',
+                                                padding: 16,
+                                                borderRadius: 12,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Text style={{ fontSize: 14, marginRight: 6 }}>
+                                                    {getStatusIcon(movie.status)}
+                                                </Text>
+                                                <Text style={{ color: '#ffffff', fontSize: 16 }}>
+                                                    {movie.status}
+                                                </Text>
+                                            </View>
+                                            <Text style={{ color: '#9ca3af', fontSize: 16 }}>▼</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
 
                                 {/* Description Input */}
                                 <View style={{ marginBottom: 20 }}>
-                                    <Text style={styles.label}>
+                                    <Text style={{
+                                        color: '#ffffff',
+                                        fontSize: 16,
+                                        fontWeight: '600',
+                                        marginBottom: 8,
+                                    }}>
                                         Description (Optional)
                                     </Text>
                                     <AnimatedTextInput
-                                        style={[styles.input, { height: 100 }]}
+                                        style={{
+                                            backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(75, 85, 99, 0.5)',
+                                            padding: 16,
+                                            borderRadius: 12,
+                                            color: '#ffffff',
+                                            fontSize: 16,
+                                            height: 100,
+                                            textAlignVertical: 'top',
+                                        }}
                                         placeholder="Add your thoughts or notes..."
                                         placeholderTextColor="#9ca3af"
                                         value={movie.description}
                                         onChangeText={(text) => handleChange('description', text)}
                                         multiline
                                         numberOfLines={4}
-                                        textAlignVertical="top"
                                     />
                                 </View>
 
@@ -494,16 +780,31 @@ const AddMovieScreen = () => {
                                 >
                                     <LinearGradient
                                         colors={loading ? ['#6b7280', '#4b5563'] : ['#e50914', '#b8070f']}
-                                        style={styles.saveButton}
+                                        style={{
+                                            padding: 18,
+                                            borderRadius: 16,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            shadowColor: '#e50914',
+                                            shadowOffset: { width: 0, height: 4 },
+                                            shadowOpacity: 0.3,
+                                            shadowRadius: 8,
+                                            elevation: 8,
+                                        }}
                                     >
                                         <Text style={{
                                             fontSize: 20,
                                             marginRight: 8,
                                             color: '#ffffff',
                                         }}>
-                                            {isNew ? '🎬' : '✏'}
+                                            {isNew ? '🎬' : '✏️'}
                                         </Text>
-                                        <Text style={styles.saveButtonText}>
+                                        <Text style={{
+                                            color: '#ffffff',
+                                            fontSize: 18,
+                                            fontWeight: 'bold',
+                                        }}>
                                             {loading ? 'Saving...' : (isNew ? 'Add to Collection' : 'Update Movie')}
                                         </Text>
                                     </LinearGradient>
@@ -513,95 +814,78 @@ const AddMovieScreen = () => {
                     </Animated.View>
                 </KeyboardAvoidingView>
 
-                {/* Loading Modal */}
-                <Loader visible={loading} />
+                {/* Modals */}
+                <ModalSelector
+                    visible={showGenreModal}
+                    onClose={() => setShowGenreModal(false)}
+                    title="Genre"
+                    options={genres}
+                    selectedValue={movie.genre}
+                    onSelect={(value) => handleChange('genre', value)}
+                />
+
+                <ModalSelector
+                    visible={showStatusModal}
+                    onClose={() => setShowStatusModal(false)}
+                    title="Status"
+                    options={statuses}
+                    selectedValue={movie.status}
+                    onSelect={(value) => handleChange('status', value)}
+                    getIcon={getStatusIcon}
+                />
+
+                <ModalSelector
+                    visible={showTypeModal}
+                    onClose={() => setShowTypeModal(false)}
+                    title="Type"
+                    options={types}
+                    selectedValue={movie.type}
+                    onSelect={(value) => handleChange('type', value)}
+                    getIcon={getTypeIcon}
+                />
             </LinearGradient>
+
+            {/* Loading Modal */}
+            {loading && (
+                <Modal transparent visible={loading}>
+                    <BlurView intensity={50} style={{ flex: 1 }}>
+                        <View style={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                        }}>
+                            <View style={{
+                                backgroundColor: '#1f2937',
+                                borderRadius: 20,
+                                padding: 30,
+                                alignItems: 'center',
+                                borderWidth: 1,
+                                borderColor: 'rgba(75, 85, 99, 0.3)',
+                            }}>
+                                <ActivityIndicator size="large" color="#e50914" />
+                                <Text style={{
+                                    color: '#ffffff',
+                                    fontSize: 18,
+                                    fontWeight: '600',
+                                    marginTop: 16,
+                                }}>
+                                    Saving to Collection...
+                                </Text>
+                                <Text style={{
+                                    color: '#9ca3af',
+                                    fontSize: 14,
+                                    marginTop: 8,
+                                }}>
+                                    Please wait
+                                </Text>
+                            </View>
+                        </View>
+                    </BlurView>
+                </Modal>
+            )}
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    label: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 8,
-    },
-    input: {
-        backgroundColor: 'rgba(31, 41, 55, 0.8)',
-        borderWidth: 1,
-        borderColor: 'rgba(75, 85, 99, 0.5)',
-        padding: 16,
-        borderRadius: 12,
-        color: '#ffffff',
-        fontSize: 16,
-    },
-    pickerContainer: {
-        backgroundColor: 'rgba(31, 41, 55, 0.8)',
-        borderWidth: 1,
-        borderColor: 'rgba(75, 85, 99, 0.5)',
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    picker: {
-        backgroundColor: 'rgba(31, 41, 55, 0.8)',
-        color: '#ffffff',
-        height: 50,
-        width: '100%',
-    },
-    rowContainer: {
-        flexDirection: 'row',
-        marginBottom: 16,
-        gap: 12,
-    },
-    halfInput: {
-        flex: 1,
-    },
-    saveButton: {
-        padding: 18,
-        borderRadius: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#e50914',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
-    },
-    saveButtonText: {
-        color: '#ffffff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    // Particle styles remain unchanged
-    particle1Style: {
-        position: 'absolute',
-        top: height * 0.1,
-        left: width * 0.8,
-        width: 10,
-        height: 10,
-        backgroundColor: '#e50914',
-        borderRadius: 5,
-    },
-    particle2Style: {
-        position: 'absolute',
-        top: height * 0.3,
-        left: width * 0.1,
-        width: 6,
-        height: 6,
-        backgroundColor: '#f59e0b',
-        borderRadius: 3,
-    },
-    particle3Style: {
-        position: 'absolute',
-        top: height * 0.5,
-        left: width * 0.9,
-        width: 8,
-        height: 8,
-        backgroundColor: '#10b981',
-        borderRadius: 4,
-    },
-});
 
 export default AddMovieScreen;

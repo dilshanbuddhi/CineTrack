@@ -7,6 +7,7 @@ import {
     Dimensions,
     Alert,
 } from 'react-native';
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const { width } = Dimensions.get('window');
 
@@ -88,12 +89,14 @@ const MovieActionModal: React.FC<MovieActionModalProps> = ({
     };
 
     return (
+        <SafeAreaView>
         <Modal
             visible={visible}
             transparent={true}
             animationType="fade"
             onRequestClose={onClose}
         >
+
             <View
                 style={{
                     flex: 1,
@@ -247,6 +250,7 @@ const MovieActionModal: React.FC<MovieActionModalProps> = ({
                 </View>
             </View>
         </Modal>
+        </SafeAreaView>
     );
 };
 
