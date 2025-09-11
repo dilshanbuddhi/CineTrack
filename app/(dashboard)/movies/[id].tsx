@@ -29,20 +29,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {SafeAreaView} from "react-native-safe-area-context";
+import {Movie} from "@/types/movie";
+import {createMovie} from "@/services/movieService";
 
 const { width, height } = Dimensions.get('window');
 
-// Movie/Series interface
-interface MovieSeries {
-    id: string;
-    title: string;
-    genre: string;
-    releaseYear: number;
-    status: 'Watchlist' | 'Watching' | 'Watched';
-    type: 'Movie' | 'Series';
-    posterUrl?: string;
-    description?: string;
-}
+
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -60,7 +52,7 @@ const AddMovieScreen = () => {
     const { id } = useLocalSearchParams<{ id?: string }>();
     const isNew = !id || id === "new";
 
-    const [movie, setMovie] = useState<MovieSeries>({
+    const [movie, setMovie] = useState<Movie>({
         id: "",
         title: "",
         genre: "Action",
@@ -69,6 +61,7 @@ const AddMovieScreen = () => {
         type: "Movie",
         posterUrl: "",
         description: "",
+        createdAt: new Date().toISOString(),
     });
 
     const [loading, setLoading] = useState(false);
@@ -136,7 +129,7 @@ const AddMovieScreen = () => {
         }
     }, [movie.posterUrl, imageError]);
 
-    const handleChange = (key: keyof MovieSeries, value: string | number) => {
+    const handleChange = (key: keyof Movie, value: string | number) => {
         if (key === 'posterUrl') {
             setImageError(false);
             setImageLoading(true);
@@ -175,7 +168,9 @@ const AddMovieScreen = () => {
             setLoading(true);
 
             // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            let response = await createMovie(movie);
+            console.log(response);
+
 
             // Here you would normally save to Firebase
             console.log("Saving movie:", movie);

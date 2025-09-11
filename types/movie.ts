@@ -6,4 +6,6 @@ export interface Movie{
     status: string;
     type: string;
     posterUrl: string;
+    description?: string;
+    createdAt?: string;
 }
