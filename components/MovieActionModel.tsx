@@ -8,22 +8,13 @@ import {
     Alert,
 } from 'react-native';
 import {SafeAreaView} from "react-native-safe-area-context";
+import { Movie } from '../types/movie';
 
 const { width } = Dimensions.get('window');
 
-interface MovieSeries {
-    id: string;
-    title: string;
-    genre: string;
-    releaseYear: number;
-    status: string;
-    type: string;
-    posterUrl: string;
-}
-
 interface MovieActionModalProps {
     visible: boolean;
-    movie: MovieSeries | null;
+    movie: Movie | null;
     onClose: () => void;
     onStatusChange: (movieId: string, newStatus: string) => void;
     onDelete: (movieId: string) => void;
@@ -65,7 +56,8 @@ const MovieActionModal: React.FC<MovieActionModalProps> = ({
     };
 
     const handleDelete = () => {
-        if (!movie) return;
+        console.log(movie)
+        //if (!movie) return;
 
         Alert.alert(
             'Delete Movie',
@@ -76,17 +68,18 @@ const MovieActionModal: React.FC<MovieActionModalProps> = ({
                     text: 'Delete',
                     style: 'destructive',
                     onPress: () => {
-                        onDelete(movie.id);
+                       // onDelete(movie.id);
                     },
                 },
             ]
         );
     };
 
-    const handleStatusChange = (newStatus: string) => {
-        if (!movie) return;
-        onStatusChange(movie.id, newStatus);
-    };
+    const handleStatusChange = (newStatus: string ) => {
+        if (movie) {
+            if (movie?.id) {
+                onStatusChange(movie.id, newStatus);
+        }}}
 
     return (
         <SafeAreaView>

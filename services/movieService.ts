@@ -1,10 +1,11 @@
-import {addDoc, collection, doc, getDoc, getDocs} from "firebase/firestore";
+import {addDoc, collection, deleteDoc, doc, getDoc, getDocs} from "firebase/firestore";
 import {db} from "@/firebase";
 import {Movie} from "@/types/movie";
+import { auth } from "@/firebase";
+
 
 export const taskRef = collection(db , "movies")
 
-import { auth } from "@/firebase";
 
 export const createMovie = async (movie: Movie) => {
     try {
@@ -18,16 +19,18 @@ export const createMovie = async (movie: Movie) => {
 
 export const getAllMovies = async () => {
     try {
-        const querySnapshot = await getDocs(taskRef)
-        const movies: Movie[] = []
-        querySnapshot.forEach((doc) => {
-           // movies.push({id: doc.id, ...doc.data()})
-        })
-        return movies
+        const querySnapshot = await getDocs(taskRef);
+        console.log(querySnapshot.docs , "querySnapshot.docs")
+        return querySnapshot.docs.map((doc) => ({
+            ...doc.data(),
+            id : doc.id
+        })) as Movie[];
+
     } catch (error) {
-        console.log(error)
+        console.error("Error fetching movies:", error);
+        return [];
     }
-}
+};
 
 export const getMovieById = async (id: string) => {
     try {
@@ -39,6 +42,16 @@ export const getMovieById = async (id: string) => {
               ...docSnap.data()
             } as Movie)
           : null
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+export const deleteMovie = async (id: string) => {
+    try {
+        const docRef = doc(db, "movies", id)
+        return deleteDoc(docRef)
     } catch (error) {
         console.log(error)
     }

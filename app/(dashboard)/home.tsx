@@ -27,21 +27,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import MovieActionModal from '@/components/MovieActionModel';
+import {deleteMovie, getAllMovies} from "@/services/movieService";
+import {Movie} from "@/types/movie";
+import {collection, onSnapshot} from "firebase/firestore";
+import {db} from "@/firebase";
 
 const { width, height } = Dimensions.get('window');
 
-// Sample data (replace with Firebase data)
-interface MovieSeries {
-    id: string;
-    title: string;
-    genre: string;
-    releaseYear: number;
-    status: string;
-    type: string;
-    posterUrl: string;
-}
 
-const sampleMovies: MovieSeries[] = [
+
+const sampleMovies: Movie[] = [
     {
         id: 'm001',
         title: 'Inception',
@@ -50,6 +45,9 @@ const sampleMovies: MovieSeries[] = [
         status: 'Watched',
         type: 'Movie',
         posterUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
+        description: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.',
+        createdAt: new Date().toISOString(),
+
     },
     {
         id: 'm002',
@@ -93,13 +91,33 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const MovieTrackerHome = () => {
+
+
+
     const [activeTab, setActiveTab] = useState('Watchlist');
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [movies, setMovies] = useState(sampleMovies);
     const [showActionModal, setShowActionModal] = useState(false);
-    const [selectedMovie, setSelectedMovie] = useState<MovieSeries | null>(null);
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const router = useRouter();
+
+   /* useEffect(() => {
+        const response = await getAllMovies()
+        setMovies(response)
+        console.log(response)
+    },[])*/
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "movies"), (snapshot) => {
+            const allMovies = snapshot.docs.map(
+                (d) => ({  ...d.data() ,id: d.id }) as Movie
+            );
+            console.log(allMovies)
+            setMovies(allMovies);
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Animation values
     const fadeAnim = useSharedValue(0);
@@ -152,7 +170,7 @@ const MovieTrackerHome = () => {
         }, 1500);
     };
 
-    const handleDeleteMovie = (movieId: string) => {
+    const handleDeleteMovie = async (movieId: string) => {
         Alert.alert(
             'Delete Movie',
             'Are you sure you want to remove this movie from your collection?',
@@ -162,7 +180,7 @@ const MovieTrackerHome = () => {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: () => {
-                        setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+                        deleteMovie(movieId)
                         setShowActionModal(false);
                         setSelectedMovie(null);
                     },
@@ -181,7 +199,7 @@ const MovieTrackerHome = () => {
         setSelectedMovie(null);
     };
 
-    const openActionModal = (movie: MovieSeries) => {
+    const openActionModal = (movie: Movie) => {
         setSelectedMovie(movie);
         setShowActionModal(true);
     };
@@ -272,7 +290,7 @@ const MovieTrackerHome = () => {
         ],
     }));
 
-    const MovieCard = ({ movie, index }: { movie: MovieSeries; index: number }) => (
+    const MovieCard = ({ movie, index }: { movie: Movie; index: number }) => (
         <Animated.View style={[cardStyle, { marginHorizontal: 16, marginBottom: 16 }]}>
             <TouchableOpacity>
                 <BlurView intensity={20} style={{ borderRadius: 16, overflow: 'hidden' }}>
@@ -501,7 +519,7 @@ const MovieTrackerHome = () => {
                     <FlatList
                         data={filteredMovies}
                         renderItem={({ item, index }) => <MovieCard movie={item} index={index} />}
-                        keyExtractor={(item) => item.id}
+                       // keyExtractor={(item) => item.id}
                         showsVerticalScrollIndicator={false}
                         refreshControl={
                             <RefreshControl
