@@ -1,7 +1,8 @@
-import {addDoc, collection, deleteDoc, doc, getDoc, getDocs} from "firebase/firestore";
+import {addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where} from "firebase/firestore";
 import {db} from "@/firebase";
 import {Movie} from "@/types/movie";
 import { auth } from "@/firebase";
+import {async} from "@firebase/util";
 
 
 export const taskRef = collection(db , "movies")
@@ -52,6 +53,29 @@ export const deleteMovie = async (id: string) => {
     try {
         const docRef = doc(db, "movies", id)
         return deleteDoc(docRef)
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const getAllMoviesByUserId = async () => {
+    try {
+        const q = query(taskRef, where("userId", "==", auth.currentUser?.uid));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        })) as Movie[];
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+}
+
+export const updateStatus = async (id: string, status: string) => {
+    try {
+        const docRef = doc(db, "movies", id)
+        return updateDoc(docRef, {status})
     } catch (error) {
         console.log(error)
     }

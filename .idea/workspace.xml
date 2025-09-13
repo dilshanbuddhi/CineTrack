@@ -6,10 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="b796eb89-0274-49bd-95de-716500710a45" name="Changes" comment="first">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(dashboard)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/_layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(dashboard)/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/home.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/components/MovieActionModel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/MovieActionModel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/movieService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/movieService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/types/movie.ts" beforeDir="false" afterPath="$PROJECT_DIR$/types/movie.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +125,8 @@
       <workItem from="1757579387389" duration="592000" />
       <workItem from="1757580000061" duration="241000" />
       <workItem from="1757580272752" duration="1221000" />
-      <workItem from="1757651177053" duration="335000" />
+      <workItem from="1757651177053" duration="13560000" />
+      <workItem from="1757738079984" duration="4372000" />
     </task>
     <task id="LOCAL-00001" summary="first">
       <option name="closed" value="true" />

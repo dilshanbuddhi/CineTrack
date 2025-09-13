@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -27,64 +28,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import MovieActionModal from '@/components/MovieActionModel';
-import {deleteMovie, getAllMovies} from "@/services/movieService";
+import {deleteMovie, getAllMovies, updateStatus} from "@/services/movieService";
 import {Movie} from "@/types/movie";
 import {collection, onSnapshot} from "firebase/firestore";
-import {db} from "@/firebase";
+import {auth, db} from "@/firebase";
+import Loader from "@/components/Loader";
 
 const { width, height } = Dimensions.get('window');
 
 
 
 const sampleMovies: Movie[] = [
-    {
-        id: 'm001',
-        title: 'Inception',
-        genre: 'Sci-Fi',
-        releaseYear: 2010,
-        status: 'Watched',
-        type: 'Movie',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-        description: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.',
-        createdAt: new Date().toISOString(),
 
-    },
-    {
-        id: 'm002',
-        title: 'Stranger Things',
-        genre: 'Thriller',
-        releaseYear: 2016,
-        status: 'Watching',
-        type: 'Series',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
-    },
-    {
-        id: 'm003',
-        title: 'Avengers: Endgame',
-        genre: 'Action',
-        releaseYear: 2019,
-        status: 'Watchlist',
-        type: 'Movie',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
-    },
-    {
-        id: 'm004',
-        title: 'The Dark Knight',
-        genre: 'Action',
-        releaseYear: 2008,
-        status: 'Watched',
-        type: 'Movie',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-    },
-    {
-        id: 'm005',
-        title: 'Breaking Bad',
-        genre: 'Drama',
-        releaseYear: 2008,
-        status: 'Watching',
-        type: 'Series',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg',
-    },
 ];
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -100,6 +55,8 @@ const MovieTrackerHome = () => {
     const [movies, setMovies] = useState(sampleMovies);
     const [showActionModal, setShowActionModal] = useState(false);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
     const router = useRouter();
 
    /* useEffect(() => {
@@ -109,14 +66,21 @@ const MovieTrackerHome = () => {
     },[])*/
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, "movies"), (snapshot) => {
-            const allMovies = snapshot.docs.map(
-                (d) => ({  ...d.data() ,id: d.id }) as Movie
-            );
-            console.log(allMovies)
-            setMovies(allMovies);
-        });
-        return () => unsubscribe();
+        setLoading(true);
+        const unsubscribe = onSnapshot(
+            collection(db, "movies"),
+            (querySnapshot) => {
+                const allMovies = querySnapshot.docs
+                    .filter((doc) => doc.data().userId === auth.currentUser?.uid)
+                    .map((doc) => ({...doc.data(), id: doc.id  })) as Movie[];
+                setMovies(allMovies);
+                setLoading(false);
+            }
+        );
+        return () => {
+            setLoading(false);
+            unsubscribe();
+        };
     }, []);
 
     // Animation values
@@ -189,14 +153,19 @@ const MovieTrackerHome = () => {
         );
     };
 
-    const handleChangeStatus = (movieId: string, newStatus: string) => {
-        setMovies((prevMovies) =>
-            prevMovies.map((movie) =>
-                movie.id === movieId ? { ...movie, status: newStatus } : movie
-            )
-        );
-        setShowActionModal(false);
-        setSelectedMovie(null);
+    const handleChangeStatus = async (movieId: string, newStatus: string) => {
+        console.log(movieId, newStatus);
+        try {
+            setLoading(true);
+            await updateStatus(movieId, newStatus);
+            setShowActionModal(false);
+            setSelectedMovie(null);
+        } catch (error) {
+            setLoading(false);
+            console.log(error);
+        }finally {
+            setLoading(false)
+        }
     };
 
     const openActionModal = (movie: Movie) => {
@@ -586,6 +555,9 @@ const MovieTrackerHome = () => {
                     onStatusChange={handleChangeStatus}
                     onDelete={handleDeleteMovie}
                 />
+
+                <Loader visible={loading}/>
+
             </LinearGradient>
         </>
     );
