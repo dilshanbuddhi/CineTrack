@@ -241,7 +241,14 @@ const MovieActionModal: React.FC<MovieActionModalProps> = ({
 
     const handleDelete = () => {
         if (!movie) return;
-        setShowDeleteAlert(true);
+        try {
+            setLoading(true);
+            setShowDeleteAlert(true);
+        } catch (error) {
+            console.error("Error opening delete alert:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleConfirmDelete = () => {

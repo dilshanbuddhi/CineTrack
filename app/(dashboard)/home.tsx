@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -12,6 +11,7 @@ import {
     FlatList,
     RefreshControl,
     Alert,
+    Modal,
 } from 'react-native';
 import Animated, {
     useSharedValue,
@@ -36,19 +36,199 @@ import Loader from "@/components/Loader";
 
 const { width, height } = Dimensions.get('window');
 
-
-
-const sampleMovies: Movie[] = [
-
-];
+const sampleMovies: Movie[] = [];
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
+// Notification Popup Component
+const NotificationPopup = ({ visible, movies, onClose, onMoviePress }: {
+    visible: boolean;
+    movies: Movie[];
+    onClose: () => void;
+    onMoviePress: (movie: Movie) => void;
+}) => {
+    const popupAnim = useSharedValue(0);
+    const overlayAnim = useSharedValue(0);
+
+    useEffect(() => {
+        if (visible) {
+            overlayAnim.value = withTiming(1, { duration: 300 });
+            popupAnim.value = withDelay(100, withSpring(1, { damping: 15, stiffness: 100 }));
+        } else {
+            popupAnim.value = withTiming(0, { duration: 200 });
+            overlayAnim.value = withDelay(100, withTiming(0, { duration: 200 }));
+        }
+    }, [visible]);
+
+    const overlayStyle = useAnimatedStyle(() => ({
+        opacity: overlayAnim.value,
+    }));
+
+    const popupStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: popupAnim.value },
+            { translateY: interpolate(popupAnim.value, [0, 1], [50, 0]) },
+        ],
+        opacity: popupAnim.value,
+    }));
+
+    if (!visible) return null;
+
+    return (
+        <Modal transparent visible={visible} animationType="none">
+            <Animated.View style={[
+                {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                },
+                overlayStyle
+            ]}>
+                <Animated.View style={[popupStyle]}>
+                    <BlurView intensity={30} style={{ borderRadius: 20, overflow: 'hidden', margin: 20 }}>
+                        <LinearGradient
+                            colors={['rgba(31, 41, 55, 0.95)', 'rgba(17, 24, 39, 0.95)']}
+                            style={{
+                                padding: 24,
+                                borderRadius: 20,
+                                borderWidth: 1,
+                                borderColor: 'rgba(229, 9, 20, 0.3)',
+                                maxWidth: width * 0.9,
+                                maxHeight: height * 0.7,
+                            }}
+                        >
+                            {/* Header */}
+                            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                <Text style={{ fontSize: 40, marginBottom: 8 }}>🔔</Text>
+                                <Text style={{
+                                    color: '#ffffff',
+                                    fontSize: 22,
+                                    fontWeight: 'bold',
+                                    textAlign: 'center'
+                                }}>
+                                    Weekly Reminder
+                                </Text>
+                                <Text style={{
+                                    color: '#9ca3af',
+                                    fontSize: 14,
+                                    textAlign: 'center',
+                                    marginTop: 4
+                                }}>
+                                    You have movies waiting to be watched!
+                                </Text>
+                            </View>
+
+                            {/* Movies List */}
+                            <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+                                {movies.map((movie, index) => (
+                                    <TouchableOpacity
+                                        key={movie.id}
+                                        onPress={() => onMoviePress(movie)}
+                                        style={{
+                                            flexDirection: 'row',
+                                            backgroundColor: 'rgba(75, 85, 99, 0.3)',
+                                            borderRadius: 12,
+                                            padding: 12,
+                                            marginBottom: 12,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(229, 9, 20, 0.2)',
+                                        }}
+                                    >
+                                        <View style={{
+                                            width: 50,
+                                            height: 70,
+                                            borderRadius: 8,
+                                            overflow: 'hidden',
+                                            backgroundColor: '#374151',
+                                        }}>
+                                            <Image
+                                                source={{ uri: movie.posterUrl }}
+                                                style={{ width: '100%', height: '100%' }}
+                                                resizeMode="cover"
+                                            />
+                                        </View>
+
+                                        <View style={{ flex: 1, marginLeft: 12, justifyContent: 'center' }}>
+                                            <Text style={{
+                                                color: '#ffffff',
+                                                fontSize: 16,
+                                                fontWeight: 'bold',
+                                                marginBottom: 4,
+                                            }}>
+                                                {movie.title}
+                                            </Text>
+                                            <Text style={{ color: '#9ca3af', fontSize: 12 }}>
+                                                {movie.genre} • {movie.releaseYear}
+                                            </Text>
+                                            <Text style={{
+                                                color: '#f59e0b',
+                                                fontSize: 11,
+                                                marginTop: 4,
+                                                fontStyle: 'italic'
+                                            }}>
+                                                📋 In watchlist for 7+ days
+                                            </Text>
+                                        </View>
+
+                                        <View style={{ justifyContent: 'center' }}>
+                                            <Text style={{ color: '#e50914', fontSize: 16 }}>▶️</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+
+                            {/* Action Buttons */}
+                            <View style={{
+                                flexDirection: 'row',
+                                marginTop: 20,
+                                gap: 12,
+                            }}>
+                                <TouchableOpacity
+                                    onPress={onClose}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: 'rgba(75, 85, 99, 0.5)',
+                                        padding: 12,
+                                        borderRadius: 10,
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
+                                        Later
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={onClose}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: '#e50914',
+                                        padding: 12,
+                                        borderRadius: 10,
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
+                                        Got it!
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </BlurView>
+                </Animated.View>
+            </Animated.View>
+        </Modal>
+    );
+};
+
 const MovieTrackerHome = () => {
-
-
-
     const [activeTab, setActiveTab] = useState('Watchlist');
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
@@ -57,13 +237,47 @@ const MovieTrackerHome = () => {
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
+    // Notification states
+    const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+    const [weekOldMovies, setWeekOldMovies] = useState<Movie[]>([]);
+    const [lastNotificationCheck, setLastNotificationCheck] = useState<string | null>(null);
+
     const router = useRouter();
 
-   /* useEffect(() => {
-        const response = await getAllMovies()
-        setMovies(response)
-        console.log(response)
-    },[])*/
+    // Check for week-old movies in watchlist
+    const checkWeekOldMovies = (moviesList: Movie[]) => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const oldMovies = moviesList.filter(movie => {
+            if (movie.status !== 'Watchlist') return false;
+
+            // Assuming you have an addedDate field in your Movie type
+            // If not, you'll need to add this field to track when movies were added
+            const addedDate = movie.createdAt ? new Date(movie.createdAt) : new Date();
+            return addedDate <= oneWeekAgo;
+        });
+
+        return oldMovies;
+    };
+
+    // Show notification popup
+    const showWeeklyNotification = () => {
+        const today = new Date().toDateString();
+
+        // Check if we already showed notification today
+        if (lastNotificationCheck === today) {
+            return;
+        }
+
+        const oldMovies = checkWeekOldMovies(movies);
+
+        if (oldMovies.length > 0) {
+            setWeekOldMovies(oldMovies);
+            setShowNotificationPopup(true);
+            setLastNotificationCheck(today);
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -75,6 +289,9 @@ const MovieTrackerHome = () => {
                     .map((doc) => ({...doc.data(), id: doc.id  })) as Movie[];
                 setMovies(allMovies);
                 setLoading(false);
+
+                // Check for weekly notifications after movies are loaded
+                setTimeout(() => showWeeklyNotification(), 2000);
             }
         );
         return () => {
@@ -82,6 +299,17 @@ const MovieTrackerHome = () => {
             unsubscribe();
         };
     }, []);
+
+    // Manual notification trigger (for testing)
+    const triggerNotification = () => {
+        const oldMovies = checkWeekOldMovies(movies);
+        if (oldMovies.length > 0) {
+            setWeekOldMovies(oldMovies);
+            setShowNotificationPopup(true);
+        } else {
+            Alert.alert("No Old Movies", "No movies have been in your watchlist for more than a week.");
+        }
+    };
 
     // Animation values
     const fadeAnim = useSharedValue(0);
@@ -135,22 +363,18 @@ const MovieTrackerHome = () => {
     };
 
     const handleDeleteMovie = async (movieId: string) => {
-        Alert.alert(
-            'Delete Movie',
-            'Are you sure you want to remove this movie from your collection?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: () => {
-                        deleteMovie(movieId)
-                        setShowActionModal(false);
-                        setSelectedMovie(null);
-                    },
-                },
-            ]
-        );
+        try {
+            setLoading(true);
+            await deleteMovie(movieId);
+            setShowActionModal(false);
+            setSelectedMovie(null);
+            console.log("deleted")
+        } catch (error) {
+            setLoading(false);
+            console.log(error);
+        }finally {
+            setLoading(false)
+        }
     };
 
     const handleChangeStatus = async (movieId: string, newStatus: string) => {
@@ -176,6 +400,11 @@ const MovieTrackerHome = () => {
     const closeActionModal = () => {
         setShowActionModal(false);
         setSelectedMovie(null);
+    };
+
+    const handleNotificationMoviePress = (movie: Movie) => {
+        setShowNotificationPopup(false);
+        openActionModal(movie);
     };
 
     const filteredMovies = movies.filter((movie) => {
@@ -259,93 +488,116 @@ const MovieTrackerHome = () => {
         ],
     }));
 
-    const MovieCard = ({ movie, index }: { movie: Movie; index: number }) => (
-        <Animated.View style={[cardStyle, { marginHorizontal: 16, marginBottom: 16 }]}>
-            <TouchableOpacity>
-                <BlurView intensity={20} style={{ borderRadius: 16, overflow: 'hidden' }}>
-                    <LinearGradient
-                        colors={['rgba(31, 41, 55, 0.8)', 'rgba(17, 24, 39, 0.9)']}
-                        style={{
-                            flexDirection: 'row',
-                            padding: 16,
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: 'rgba(75, 85, 99, 0.3)',
-                        }}
-                    >
-                        <View
+    const MovieCard = ({ movie, index }: { movie: Movie; index: number }) => {
+        // Check if movie is week old
+        const isWeekOld = movie.status === 'Watchlist' && movie.createdAt &&
+            new Date(movie.createdAt) <= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        return (
+            <Animated.View style={[cardStyle, { marginHorizontal: 16, marginBottom: 16 }]}>
+                <TouchableOpacity>
+                    <BlurView intensity={20} style={{ borderRadius: 16, overflow: 'hidden' }}>
+                        <LinearGradient
+                            colors={['rgba(31, 41, 55, 0.8)', 'rgba(17, 24, 39, 0.9)']}
                             style={{
-                                width: 80,
-                                height: 120,
-                                borderRadius: 12,
-                                overflow: 'hidden',
-                                backgroundColor: '#374151',
+                                flexDirection: 'row',
+                                padding: 16,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: isWeekOld ? 'rgba(245, 158, 11, 0.5)' : 'rgba(75, 85, 99, 0.3)',
                             }}
                         >
-                            <Image
-                                source={{ uri: movie.posterUrl }}
-                                style={{ width: '100%', height: '100%' }}
-                                resizeMode="cover"
-                            />
-                        </View>
-
-                        <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
-                            <View>
-                                <Text
-                                    style={{
-                                        color: '#ffffff',
-                                        fontSize: 18,
-                                        fontWeight: 'bold',
-                                        marginBottom: 4,
-                                    }}
-                                >
-                                    {movie.title}
-                                </Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>
-                                        {movie.genre} • {movie.releaseYear} • {movie.type}
+                            {isWeekOld && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 8,
+                                    backgroundColor: 'rgba(245, 158, 11, 0.9)',
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 2,
+                                    borderRadius: 10,
+                                    zIndex: 1,
+                                }}>
+                                    <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '600' }}>
+                                        ⏰ 7+ days
                                     </Text>
                                 </View>
+                            )}
+
+                            <View
+                                style={{
+                                    width: 80,
+                                    height: 120,
+                                    borderRadius: 12,
+                                    overflow: 'hidden',
+                                    backgroundColor: '#374151',
+                                }}
+                            >
+                                <Image
+                                    source={{ uri: movie.posterUrl }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    resizeMode="cover"
+                                />
                             </View>
 
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <View
-                                    style={{
-                                        backgroundColor: getStatusColor(movie.status),
-                                        paddingHorizontal: 12,
-                                        paddingVertical: 6,
-                                        borderRadius: 20,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    <Text style={{ fontSize: 12, marginRight: 4, color: '#ffffff' }}>
-                                        {getStatusIcon(movie.status)}
+                            <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
+                                <View>
+                                    <Text
+                                        style={{
+                                            color: '#ffffff',
+                                            fontSize: 18,
+                                            fontWeight: 'bold',
+                                            marginBottom: 4,
+                                        }}
+                                    >
+                                        {movie.title}
                                     </Text>
-                                    <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '600' }}>
-                                        {movie.status}
-                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                                            {movie.genre} • {movie.releaseYear} • {movie.type}
+                                        </Text>
+                                    </View>
                                 </View>
 
-                                <TouchableOpacity
-                                    style={{
-                                        backgroundColor: 'rgba(229, 9, 20, 0.2)',
-                                        padding: 8,
-                                        borderRadius: 8,
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(229, 9, 20, 0.3)',
-                                    }}
-                                    onPress={() => openActionModal(movie)}
-                                >
-                                    <Text style={{ color: '#ef4444', fontSize: 16 }}>⋯</Text>
-                                </TouchableOpacity>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <View
+                                        style={{
+                                            backgroundColor: getStatusColor(movie.status),
+                                            paddingHorizontal: 12,
+                                            paddingVertical: 6,
+                                            borderRadius: 20,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text style={{ fontSize: 12, marginRight: 4, color: '#ffffff' }}>
+                                            {getStatusIcon(movie.status)}
+                                        </Text>
+                                        <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '600' }}>
+                                            {movie.status}
+                                        </Text>
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                                            padding: 8,
+                                            borderRadius: 8,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(229, 9, 20, 0.3)',
+                                        }}
+                                        onPress={() => openActionModal(movie)}
+                                    >
+                                        <Text style={{ color: '#ef4444', fontSize: 16 }}>⋯</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
-                    </LinearGradient>
-                </BlurView>
-            </TouchableOpacity>
-        </Animated.View>
-    );
+                        </LinearGradient>
+                    </BlurView>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
 
     return (
         <>
@@ -422,6 +674,7 @@ const MovieTrackerHome = () => {
                                     borderWidth: 1,
                                     borderColor: 'rgba(229, 9, 20, 0.3)',
                                 }}
+                                onPress={triggerNotification}
                             >
                                 <Text style={{ fontSize: 20 }}>🔔</Text>
                             </TouchableOpacity>
@@ -488,7 +741,7 @@ const MovieTrackerHome = () => {
                     <FlatList
                         data={filteredMovies}
                         renderItem={({ item, index }) => <MovieCard movie={item} index={index} />}
-                       // keyExtractor={(item) => item.id}
+                        //keyExtractor={(item) => item.id}
                         showsVerticalScrollIndicator={false}
                         refreshControl={
                             <RefreshControl
@@ -547,17 +800,25 @@ const MovieTrackerHome = () => {
                     </AnimatedTouchableOpacity>
                 </Animated.View>
 
+                {/* Weekly Notification Popup */}
+                <NotificationPopup
+                    visible={showNotificationPopup}
+                    movies={weekOldMovies}
+                    onClose={() => setShowNotificationPopup(false)}
+                    onMoviePress={handleNotificationMoviePress}
+                />
+
                 {/* Movie Action Modal */}
                 <MovieActionModal
                     visible={showActionModal}
                     movie={selectedMovie}
                     onClose={closeActionModal}
-                    onStatusChange={handleChangeStatus}
                     onDelete={handleDeleteMovie}
+                    onStatusChange={handleChangeStatus}
                 />
 
-                <Loader visible={loading}/>
-
+                {/* Loader */}
+                <Loader visible={loading} />
             </LinearGradient>
         </>
     );
