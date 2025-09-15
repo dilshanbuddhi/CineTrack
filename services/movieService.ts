@@ -2,7 +2,6 @@ import {addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, w
 import {db} from "@/firebase";
 import {Movie} from "@/types/movie";
 import { auth } from "@/firebase";
-import {async} from "@firebase/util";
 
 
 export const taskRef = collection(db , "movies")
