@@ -5,13 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b796eb89-0274-49bd-95de-716500710a45" name="Changes" comment="first">
-      <change afterPath="$PROJECT_DIR$/components/NotificationPopup.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eas.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(dashboard)/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/home.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/app.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/movieService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/movieService.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +60,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/react native/CineTrack&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/nethushi&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -126,7 +126,13 @@
       <workItem from="1757580272752" duration="1221000" />
       <workItem from="1757651177053" duration="13560000" />
       <workItem from="1757738079984" duration="4764000" />
-      <workItem from="1757909732906" duration="6680000" />
+      <workItem from="1757909732906" duration="12576000" />
+      <workItem from="1757990333117" duration="827000" />
+      <workItem from="1757991324551" duration="2323000" />
+      <workItem from="1758004021620" duration="113000" />
+      <workItem from="1758256015064" duration="3352000" />
+      <workItem from="1758289336872" duration="299000" />
+      <workItem from="1758514883265" duration="3400000" />
     </task>
     <task id="LOCAL-00001" summary="first">
       <option name="closed" value="true" />
