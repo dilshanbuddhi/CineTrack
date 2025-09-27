@@ -323,11 +323,12 @@ const MovieTrackerHome = () => {
                                 borderColor: isWeekOld ? 'rgba(245, 158, 11, 0.5)' : 'rgba(75, 85, 99, 0.3)',
                             }}
                         >
+                            {/* Week Old Badge */}
                             {isWeekOld && (
                                 <View style={{
                                     position: 'absolute',
                                     top: 8,
-                                    right: 8,
+                                    left: 8,
                                     backgroundColor: 'rgba(245, 158, 11, 0.9)',
                                     paddingHorizontal: 8,
                                     paddingVertical: 2,
@@ -340,6 +341,25 @@ const MovieTrackerHome = () => {
                                 </View>
                             )}
 
+                            {/* Edit Icon Top Right */}
+                            <TouchableOpacity
+                                style={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 8,
+                                    backgroundColor: '#ffb6001f',
+                                    padding: 8,
+                                    borderRadius: 8,
+                                    borderWidth: 1,
+                                    borderColor: '#ffb60033',
+                                    zIndex: 2,
+                                }}
+                                onPress={() => router.push(`/movies/${movie.id}`)}
+                            >
+                                <Text style={{ color: '#ef4444', fontSize: 16 }}>✏️</Text>
+                            </TouchableOpacity>
+
+                            {/* Movie Poster */}
                             <View
                                 style={{
                                     width: 80,
@@ -356,6 +376,7 @@ const MovieTrackerHome = () => {
                                 />
                             </View>
 
+                            {/* Movie Info */}
                             <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
                                 <View>
                                     <Text
@@ -375,6 +396,7 @@ const MovieTrackerHome = () => {
                                     </View>
                                 </View>
 
+                                {/* Status & Action Button */}
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <View
                                         style={{
@@ -394,6 +416,7 @@ const MovieTrackerHome = () => {
                                         </Text>
                                     </View>
 
+                                    {/* Action Menu */}
                                     <TouchableOpacity
                                         style={{
                                             backgroundColor: 'rgba(229, 9, 20, 0.2)',
@@ -413,6 +436,7 @@ const MovieTrackerHome = () => {
                 </TouchableOpacity>
             </Animated.View>
         );
+
     };
 
     return (

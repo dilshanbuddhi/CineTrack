@@ -41,7 +41,7 @@ export const getMovieById = async (id: string) => {
               id: docSnap.id,
               ...docSnap.data()
             } as Movie)
-          : null
+          : null;
     } catch (error) {
         console.log(error)
     }
@@ -75,6 +75,15 @@ export const updateStatus = async (id: string, status: string) => {
     try {
         const docRef = doc(db, "movies", id)
         return updateDoc(docRef, {status})
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const updateMovie = async (movie: Movie , id : string) => {
+    try {
+        const docRef = doc(db, "movies", id)
+        return updateDoc(docRef, { ...movie, updatedAt: new Date().toISOString() })
     } catch (error) {
         console.log(error)
     }

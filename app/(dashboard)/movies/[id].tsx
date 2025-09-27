@@ -30,7 +30,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {SafeAreaView} from "react-native-safe-area-context";
 import {Movie} from "@/types/movie";
-import {createMovie} from "@/services/movieService";
+import {createMovie, getMovieById, updateMovie} from "@/services/movieService";
 
 const { width, height } = Dimensions.get('window');
 
@@ -50,7 +50,10 @@ const types = ['Movie', 'Series'];
 const AddMovieScreen = () => {
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id?: string }>();
+    console.log(id ,  " jjjjjjjj")
     const isNew = !id || id === "new";
+    console.log(isNew , " isNew")
+
 
     const [movie, setMovie] = useState<Movie>({
         id: "",
@@ -63,6 +66,19 @@ const AddMovieScreen = () => {
         description: "",
         createdAt: new Date().toISOString(),
     });
+
+
+    useEffect(() => {
+        if (!isNew) {
+            getMovieById(id).then((fetchedMovie) => {
+                if (fetchedMovie) {
+                    setMovie(fetchedMovie);
+                }
+            });
+        }
+    }, [id]);
+
+
 
     const [loading, setLoading] = useState(false);
     const [showGenreModal, setShowGenreModal] = useState(false);
@@ -165,13 +181,27 @@ const AddMovieScreen = () => {
         );
 
         try {
+
+
             setLoading(true);
 
-            // Simulate API call
-            let response = await createMovie(movie);
-            console.log(response);
+            if (isNew) {
+                await createMovie(movie);
+            }else {
+                await updateMovie(movie , id);
+            }
 
-
+            setMovie({
+                id : "",
+                title : "",
+                genre : "Action",
+                releaseYear : new Date().getFullYear(),
+                status : "Watchlist",
+                type : "Movie",
+                posterUrl : "",
+                description : "",
+                createdAt : new Date().toISOString(),
+            })
             // Here you would normally save to Firebase
             console.log("Saving movie:", movie);
 
