@@ -50,3 +50,4 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
 APK here =>   https://drive.google.com/drive/folders/1E7Hm9z5S4iXZxMX7aYW8OonTPty0NXFw?usp=drive_link 
+YT demo video  -> https://youtube.com/shorts/WzZlTasLQwk?si=z4hgubgF0r_wk9-M
