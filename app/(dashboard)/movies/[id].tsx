@@ -31,6 +31,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import {SafeAreaView} from "react-native-safe-area-context";
 import {Movie} from "@/types/movie";
 import {createMovie, getMovieById, updateMovie} from "@/services/movieService";
+import * as Notifications from "expo-notifications";
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -187,6 +189,14 @@ const AddMovieScreen = () => {
 
             if (isNew) {
                 await createMovie(movie);
+                await Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: "You have movies waiting 🎬",
+                        body: `New movie added (${movie.title}), start tracking it`,
+                        sound: "default",
+                    },
+                    trigger: null, // null = show immediately
+                });
             }else {
                 await updateMovie(movie , id);
             }

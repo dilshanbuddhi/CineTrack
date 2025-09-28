@@ -68,8 +68,6 @@ const MovieTrackerHome = () => {
         const oldMovies = moviesList.filter(movie => {
             if (movie.status !== 'Watchlist') return false;
 
-            // Assuming you have an addedDate field in your Movie type
-            // If not, you'll need to add this field to track when movies were added
             const addedDate = movie.createdAt ? new Date(movie.createdAt) : new Date();
             return addedDate <= oneWeekAgo;
         });
