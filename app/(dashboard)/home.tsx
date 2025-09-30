@@ -34,7 +34,8 @@ import {collection, onSnapshot} from "firebase/firestore";
 import {auth, db} from "@/firebase";
 import Loader from "@/components/Loader";
 import NotificationPopup from "@/components/NotificationPopup";
-
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 const { width, height } = Dimensions.get('window');
 
 const sampleMovies: Movie[] = [];
@@ -61,13 +62,23 @@ const MovieTrackerHome = () => {
     const router = useRouter();
 
     // Check for week-old movies in watchlist
+    useEffect(() => {
+        if (Platform.OS === "android") {
+            Notifications.setNotificationChannelAsync("default", {
+                name: "default",
+                importance: Notifications.AndroidImportance.HIGH,
+            });
+        }
+    }, []);
+
+
+// Check for week-old movies
     const checkWeekOldMovies = (moviesList: Movie[]) => {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-        const oldMovies = moviesList.filter(movie => {
-            if (movie.status !== 'Watchlist') return false;
-
+        const oldMovies = moviesList.filter((movie) => {
+            if (movie.status !== "Watchlist") return false;
             const addedDate = movie.createdAt ? new Date(movie.createdAt) : new Date();
             return addedDate <= oneWeekAgo;
         });
@@ -75,8 +86,28 @@ const MovieTrackerHome = () => {
         return oldMovies;
     };
 
+// Schedule notification once per day
+    const scheduleDailyNotification = async (moviesList: Movie[]) => {
+        const oldMovies = checkWeekOldMovies(moviesList);
+
+        if (oldMovies.length > 0) {
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "🎬 Time to watch your old movies!",
+                    body: `You have ${oldMovies.length} movie(s) in your watchlist older than a week.`,
+                    sound: true,
+                },
+                trigger: {
+                    hour: 9,
+                    minute: 0,
+                    repeats: true,
+                    channelId: "default",
+                },
+            });
+        }
+    };
     // Show notification popup
-    const showWeeklyNotification = () => {
+    const showWeeklyNotification = async () => {
         const today = new Date().toDateString();
 
         // Check if we already showed notification today
@@ -91,6 +122,7 @@ const MovieTrackerHome = () => {
             setShowNotificationPopup(true);
             setLastNotificationCheck(today);
         }
+        await scheduleDailyNotification(oldMovies);
     };
 
     useEffect(() => {

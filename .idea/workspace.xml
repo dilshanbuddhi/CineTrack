@@ -7,9 +7,6 @@
     <list default="true" id="b796eb89-0274-49bd-95de-716500710a45" name="Changes" comment="first">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(dashboard)/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/home.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(dashboard)/movies/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/movies/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(dashboard)/movies/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(dashboard)/movies/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
@@ -136,7 +133,7 @@
       <workItem from="1758514883265" duration="7317000" />
       <workItem from="1758894326305" duration="702000" />
       <workItem from="1758948298944" duration="5877000" />
-      <workItem from="1759068326554" duration="3724000" />
+      <workItem from="1759068326554" duration="6483000" />
     </task>
     <task id="LOCAL-00001" summary="first">
       <option name="closed" value="true" />
